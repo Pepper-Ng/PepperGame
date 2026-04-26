@@ -1,9 +1,82 @@
 #!/bin/sh
 
 role=${CONTAINER_ROLE:-none}
+generated_app_key_file=/var/www/storage/app_key
+
+write_env_var() {
+    key="$1"
+    value="$2"
+    escaped_value=$(printf '%s' "$value" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\$/\\$/g')
+    printf '%s="%s"\n' "$key" "$escaped_value" >> /var/www/.env
+}
+
+create_env_file_from_environment() {
+    app_key_value="${APP_KEY:-}"
+
+    if [ -z "$app_key_value" ] && [ -f "$generated_app_key_file" ]; then
+        app_key_value=$(tr -d '\r\n' < "$generated_app_key_file")
+    fi
+
+    : > /var/www/.env
+
+    write_env_var "APP_NAME" "${APP_NAME:-OGameX}"
+    write_env_var "APP_ENV" "${APP_ENV:-production}"
+    write_env_var "APP_KEY" "$app_key_value"
+    write_env_var "APP_DEBUG" "${APP_DEBUG:-false}"
+    write_env_var "LOG_LEVEL" "${LOG_LEVEL:-error}"
+    write_env_var "APP_URL" "${APP_URL:-https://localhost}"
+    write_env_var "DEBUGBAR_ENABLED" "${DEBUGBAR_ENABLED:-false}"
+    write_env_var "DEBUGBAR_REMOTE_SITES_PATH" "${DEBUGBAR_REMOTE_SITES_PATH:-/var/www}"
+    write_env_var "DEBUGBAR_LOCAL_SITES_PATH" "${DEBUGBAR_LOCAL_SITES_PATH:-/var/www}"
+    write_env_var "DISCORD_ALERT_WEBHOOK" "${DISCORD_ALERT_WEBHOOK:-}"
+    write_env_var "DB_CONNECTION" "${DB_CONNECTION:-mysql}"
+    write_env_var "DB_HOST" "${DB_HOST:-ogamex-db}"
+    write_env_var "DB_PORT" "${DB_PORT:-3306}"
+    write_env_var "DB_DATABASE" "${DB_DATABASE:-laravel}"
+    write_env_var "DB_USERNAME" "${DB_USERNAME:-root}"
+    write_env_var "DB_PASSWORD" "${DB_PASSWORD:-toor}"
+    write_env_var "BROADCAST_CONNECTION" "${BROADCAST_CONNECTION:-log}"
+    write_env_var "CACHE_STORE" "${CACHE_STORE:-file}"
+    write_env_var "SESSION_DRIVER" "${SESSION_DRIVER:-database}"
+    write_env_var "SESSION_LIFETIME" "${SESSION_LIFETIME:-720}"
+    write_env_var "QUEUE_CONNECTION" "${QUEUE_CONNECTION:-database}"
+    write_env_var "REDIS_HOST" "${REDIS_HOST:-127.0.0.1}"
+    write_env_var "REDIS_PASSWORD" "${REDIS_PASSWORD:-null}"
+    write_env_var "REDIS_PORT" "${REDIS_PORT:-6379}"
+    write_env_var "MAIL_MAILER" "${MAIL_MAILER:-log}"
+    write_env_var "MAIL_HOST" "${MAIL_HOST:-127.0.0.1}"
+    write_env_var "MAIL_PORT" "${MAIL_PORT:-2525}"
+    write_env_var "MAIL_USERNAME" "${MAIL_USERNAME:-}"
+    write_env_var "MAIL_PASSWORD" "${MAIL_PASSWORD:-}"
+    write_env_var "MAIL_ENCRYPTION" "${MAIL_ENCRYPTION:-null}"
+    write_env_var "MAIL_FROM_ADDRESS" "${MAIL_FROM_ADDRESS:-hello@example.com}"
+    write_env_var "MAIL_FROM_NAME" "${MAIL_FROM_NAME:-OGameX}"
+    write_env_var "PUSHER_APP_ID" "${PUSHER_APP_ID:-}"
+    write_env_var "PUSHER_APP_KEY" "${PUSHER_APP_KEY:-}"
+    write_env_var "PUSHER_APP_SECRET" "${PUSHER_APP_SECRET:-}"
+    write_env_var "PUSHER_HOST" "${PUSHER_HOST:-}"
+    write_env_var "PUSHER_PORT" "${PUSHER_PORT:-443}"
+    write_env_var "PUSHER_SCHEME" "${PUSHER_SCHEME:-https}"
+    write_env_var "PUSHER_APP_CLUSTER" "${PUSHER_APP_CLUSTER:-mt1}"
+    write_env_var "REVERB_APP_ID" "${REVERB_APP_ID:-ogamex}"
+    write_env_var "REVERB_APP_KEY" "${REVERB_APP_KEY:-ogamex-key}"
+    write_env_var "REVERB_APP_SECRET" "${REVERB_APP_SECRET:-ogamex-secret}"
+    write_env_var "REVERB_HOST" "${REVERB_HOST:-localhost}"
+    write_env_var "REVERB_PORT" "${REVERB_PORT:-443}"
+    write_env_var "REVERB_SCHEME" "${REVERB_SCHEME:-https}"
+    write_env_var "REVERB_SERVER_HOST" "${REVERB_SERVER_HOST:-0.0.0.0}"
+    write_env_var "REVERB_SERVER_PORT" "${REVERB_SERVER_PORT:-8090}"
+
+    echo ".env file not found, generated .env from container environment"
+}
 
 if [ ! -f /var/www/.env ]; then
-    if [ -f /var/www/.env.example ]; then
+    if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
+        create_env_file_from_environment
+    elif [ "${APP_ENV:-}" = "production" ] && [ -f /var/www/.env.example-prod ]; then
+        cp /var/www/.env.example-prod /var/www/.env
+        echo ".env file not found, copied .env.example-prod to .env"
+    elif [ -f /var/www/.env.example ]; then
         cp /var/www/.env.example /var/www/.env
         echo ".env file not found, copied .env.example to .env"
     else
@@ -14,7 +87,7 @@ fi
 
 # Extract environment information
 is_production=false
-if grep -q "^APP_ENV=production" .env; then
+if [ "${APP_ENV:-}" = "production" ] || grep -q "^APP_ENV=production" .env; then
     is_production=true
 fi
 
@@ -45,8 +118,13 @@ elif [ "$role" = "app" ]; then
     if [ -z "$app_key" ]; then
         echo "APP_KEY is empty or not set. Generating a new key..."
         php artisan key:generate --force
+        app_key=$(grep -E "^APP_KEY=" .env | cut -d '=' -f2 | tr -d '[:space:]' | tr -d '\r')
     else
         echo "APP_KEY is set to: $app_key"
+    fi
+
+    if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ] && [ -n "$app_key" ]; then
+        printf '%s\n' "$app_key" > "$generated_app_key_file"
     fi
 
     # Compile rust modules
