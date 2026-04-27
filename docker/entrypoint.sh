@@ -10,6 +10,28 @@ write_env_var() {
     printf '%s="%s"\n' "$key" "$escaped_value" >> /var/www/.env
 }
 
+read_dotenv_value() {
+    key="$1"
+    value=$(grep -E "^${key}=" .env | cut -d '=' -f2- | tr -d '\r')
+
+    case "$value" in
+        "\"\"")
+            value=""
+            ;;
+        "''")
+            value=""
+            ;;
+        \"*\")
+            value=$(printf '%s' "$value" | sed 's/^"//; s/"$//')
+            ;;
+        \'*\')
+            value=$(printf '%s' "$value" | sed "s/^'//; s/'$//")
+            ;;
+    esac
+
+    printf '%s' "$value"
+}
+
 create_env_file_from_environment() {
     app_key_value="${APP_KEY:-}"
 
@@ -70,6 +92,19 @@ create_env_file_from_environment() {
     echo ".env file not found, generated .env from container environment"
 }
 
+ensure_runtime_directories() {
+    mkdir -p \
+        /var/www/storage/app/public \
+        /var/www/storage/debugbar \
+        /var/www/storage/framework/cache/data \
+        /var/www/storage/framework/sessions \
+        /var/www/storage/framework/testing \
+        /var/www/storage/framework/views \
+        /var/www/storage/logs \
+        /var/www/storage/rust-libs \
+        /var/www/bootstrap/cache
+}
+
 if [ ! -f /var/www/.env ]; then
     if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
         create_env_file_from_environment
@@ -104,6 +139,8 @@ elif [ "$role" = "queue" ]; then
 elif [ "$role" = "reverb" ]; then
     php /var/www/artisan reverb:start --host="${REVERB_SERVER_HOST:-0.0.0.0}" --port="${REVERB_SERVER_PORT:-8090}"
 elif [ "$role" = "app" ]; then
+    ensure_runtime_directories
+
     # Check APP_ENV and run appropriate composer install
     if [ "$is_production" = true ]; then
         echo "Production environment detected. Running composer install --no-dev..."
@@ -114,11 +151,11 @@ elif [ "$role" = "app" ]; then
     fi
 
     # Generate APP_KEY if not set or empty in the .env file
-    app_key=$(grep -E "^APP_KEY=" .env | cut -d '=' -f2 | tr -d '[:space:]' | tr -d '\r')
+    app_key=$(read_dotenv_value "APP_KEY")
     if [ -z "$app_key" ]; then
         echo "APP_KEY is empty or not set. Generating a new key..."
         php artisan key:generate --force
-        app_key=$(grep -E "^APP_KEY=" .env | cut -d '=' -f2 | tr -d '[:space:]' | tr -d '\r')
+        app_key=$(read_dotenv_value "APP_KEY")
     else
         echo "APP_KEY is set to: $app_key"
     fi
