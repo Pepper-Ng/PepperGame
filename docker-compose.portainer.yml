@@ -60,6 +60,7 @@ x-ogamex-app-service: &ogamex-app-service
   volumes:
     - ogame-storage:/var/www/storage
     - ogame-bootstrap-cache:/var/www/bootstrap/cache
+    - ogame-vendor:/var/www/vendor
   networks:
     - app-network
 
@@ -151,4 +152,6 @@ volumes:
   ogame-storage:
     driver: local
   ogame-bootstrap-cache:
+    driver: local
+  ogame-vendor:
     driver: local
