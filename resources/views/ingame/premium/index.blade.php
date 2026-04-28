@@ -8,6 +8,12 @@
         </div>
     @endif
 
+    @if (session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <div id="eventboxContent" style="display: none">
         <img height="16" width="16" src="/img/icons/3f9884806436537bdec305aa26fc60.gif">
     </div>
@@ -122,7 +128,7 @@
                                 </a>
                             </div>
                             <div class="remaining tooltip " title="">
-                                <span class="remDate">{{ __('t_ingame.premium.remaining_officers', ['current' => 0, 'max' => 5]) }}</span>
+                                <span class="remDate">{{ __('t_ingame.premium.remaining_officers', ['current' => $officers['12']['active_count'], 'max' => $officers['12']['max_count']]) }}</span>
                             </div>
                         </div>
                     </li>
@@ -140,6 +146,8 @@
         detailUrl = {!! json_encode(route('premium.detail')) !!};
 
         $(function () {
+            gfSlider = new GFSlider(getElementByIdWithCache('planet'));
+
             @if (!empty($initialOfficerRef))
             var $initialOfficer = $('.slideIn[ref={{ json_encode($initialOfficerRef) }}]');
 

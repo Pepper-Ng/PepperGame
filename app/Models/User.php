@@ -16,8 +16,10 @@ use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Lab404\Impersonate\Models\Impersonate;
 use OGame\Enums\CharacterClass;
+use OGame\Enums\OfficerType;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Traits\HasRoles;
@@ -45,6 +47,11 @@ use Spatie\Permission\Traits\HasRoles;
  * @property bool $vacation_mode
  * @property Carbon|null $vacation_mode_activated_at
  * @property Carbon|null $vacation_mode_until
+ * @property Carbon|null $commander_until
+ * @property Carbon|null $admiral_until
+ * @property Carbon|null $engineer_until
+ * @property Carbon|null $geologist_until
+ * @property Carbon|null $technocrat_until
  * @property int|null $character_class
  * @property bool $character_class_free_used
  * @property Carbon|null $character_class_changed_at
@@ -137,6 +144,11 @@ class User extends Authenticatable
         'vacation_mode_activated_at' => 'datetime',
         'vacation_mode_until' => 'datetime',
         'dark_matter_last_regen' => 'datetime',
+        'commander_until' => 'datetime',
+        'admiral_until' => 'datetime',
+        'engineer_until' => 'datetime',
+        'geologist_until' => 'datetime',
+        'technocrat_until' => 'datetime',
         'character_class_free_used' => 'boolean',
         'character_class_changed_at' => 'datetime',
         'alliance_left_at' => 'datetime',
@@ -214,6 +226,39 @@ class User extends Authenticatable
         }
 
         return CharacterClass::tryFrom($this->character_class);
+    }
+
+    public function getOfficerUntil(OfficerType $officer): ?Carbon
+    {
+        $column = $officer->expiryColumn();
+        $expiresAt = $this->{$column};
+
+        return $expiresAt instanceof Carbon ? $expiresAt : null;
+    }
+
+    public function setOfficerUntil(OfficerType $officer, ?Carbon $expiresAt): void
+    {
+        $this->{$officer->expiryColumn()} = $expiresAt;
+    }
+
+    public function isOfficerActive(OfficerType $officer): bool
+    {
+        $expiresAt = $this->getOfficerUntil($officer);
+
+        return $expiresAt !== null && $expiresAt->greaterThan(Date::now());
+    }
+
+    public function getActiveOfficerCount(): int
+    {
+        $count = 0;
+
+        foreach (OfficerType::cases() as $officer) {
+            if ($this->isOfficerActive($officer)) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     /**

@@ -266,7 +266,7 @@
                     <div id="darkmatter_box" class="darkmatter tooltipHTML resource ipiHintable tpd-hideOnClickOutside"
                          title="{{ __('t_ingame.layout.res_dark_matter') }}|<table class=&quot;resourceTooltip&quot;><tr><th>{{ __('t_ingame.layout.res_available') }}:</th><td><span class=&quot;&quot;>{!! $resources['darkmatter']['amount_formatted'] !!}</span></td></tr></table>"
                          data-tooltip-button="{{ __('t_ingame.layout.res_purchase_dm') }}" data-ipi-hint="ipiResourcedarkmatter">
-                        <a href="#TODO_page=payment" class="overlay">
+                        <a href="{{ route('payment.overlay') }}" class="overlay">
                             <img src="/img/icons/401d1a91ff40dc7c8acfa4377d3d65.gif">
                             <div class="resourceIcon darkmatter"></div>
                         </a>
@@ -744,7 +744,7 @@
                 var player = {
                     "playerId": {{ $currentPlayer->getId() }},
                     "name": "{{ $currentPlayer->getUsername(false) }}",
-                    "hasCommander": false,
+                    "hasCommander": @json($currentPlayer->hasCommander()),
                     "hasAPassword": true
                 };
                 var hasAPassword = true;
@@ -1368,7 +1368,7 @@ However, the Space Dock's engineers think that some of the remains can be salvag
                             "tooltip": "{{ __('t_ingame.layout.res_dark_matter') }}|<table class=\"resourceTooltip\"><tr><th>{{ __('t_ingame.layout.res_available') }}:<\/th><td><span class=\"\">{!! $resources['darkmatter']['amount_formatted'] !!}<\/span><\/td><\/tr><\/table>",
                             "classesListItem": "",
                             "classes": "overlay",
-                            "link": "#TODO_page=payment",
+                            "link": "{{ route('payment.overlay') }}",
                             "img": "/img/icons/401d1a91ff40dc7c8acfa4377d3d65.gif"
                         }
                     },
@@ -1556,7 +1556,7 @@ However, the Space Dock's engineers think that some of the remains can be salvag
                 }, function () {
                     $('#planet').find('h2 a img').toggleClass('hinted');
                 });
-                var player = {hasCommander: false};
+                var player = {hasCommander: @json($currentPlayer->hasCommander())};
                 var localizedBBCode = {!! json_encode([
                     'bold'               => __('t_ingame.messages.bbcode_bold'),
                     'italic'             => __('t_ingame.messages.bbcode_italic'),

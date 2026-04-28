@@ -399,7 +399,7 @@
     var couldBeBuild = 1;
     var isShip = 0;
     var isRocket = 0;
-    var hasCommander = 0;
+    var hasCommander = @json($planet->getPlayer()?->hasCommander() ?? false);
     var buildableAt = null;
     var error = 2000;
     var premiumerror = 0;

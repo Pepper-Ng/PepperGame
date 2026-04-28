@@ -138,7 +138,7 @@
             var galaxyLoca = @json($galaxyLocaData);
             var loca = @json($locaData);
             var shipsendingDone = 1;
-            var premiumLink = "#?page=premium&openDetail=3";
+            var premiumLink = "{{ route('premium.index', ['openDetail' => 3]) }}";
             var sendDiscoverSystemUrl = "";
             var missleAttackLink = "#?page=ajax&component=missileattacklayer&width=669&height=250";
             var canSwitchGalaxy = true;

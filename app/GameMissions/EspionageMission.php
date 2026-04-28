@@ -94,8 +94,8 @@ class EspionageMission extends GameMission
         // Calculate counter-espionage chance
         $counterEspionageService = resolve(CounterEspionageService::class);
         $attackerProbeCount = $mission->espionage_probe;
-        $attackerEspionageLevel = $origin_planet->getPlayer()->getResearchLevel('espionage_technology');
-        $defenderEspionageLevel = $target_planet->getPlayer()->getResearchLevel('espionage_technology');
+        $attackerEspionageLevel = $origin_planet->getPlayer()->getEffectiveResearchLevel('espionage_technology');
+        $defenderEspionageLevel = $target_planet->getPlayer()->getEffectiveResearchLevel('espionage_technology');
 
         // TODO: Include ACS Defend fleets in counter-espionage chance calculation
         // Currently only counts planet owner's ships via getDefenderShipCount()
@@ -454,8 +454,8 @@ class EspionageMission extends GameMission
         }
 
         // TODO: Validate this does not cause issues when probing slot 16
-        $attackerEspionageLevel = $originPlanet->getPlayer()->getResearchLevel('espionage_technology');
-        $defenderEspionageLevel = $targetPlanet->getPlayer()->getResearchLevel('espionage_technology');
+        $attackerEspionageLevel = $originPlanet->getPlayer()->getEffectiveResearchLevel('espionage_technology');
+        $defenderEspionageLevel = $targetPlanet->getPlayer()->getEffectiveResearchLevel('espionage_technology');
         $techDifference = $defenderEspionageLevel - $attackerEspionageLevel;
         $levelDifference = max(0, $techDifference);
         $extraProbesRequired = pow($levelDifference, 2);

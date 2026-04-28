@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use OGame\GameObjects\Models\Calculations\CalculationType;
+use OGame\Enums\OfficerType;
 use OGame\Models\BuildingQueue;
 use OGame\Models\FleetMission;
 use OGame\Models\Highscore;
@@ -428,6 +429,35 @@ class PlayerService
     }
 
     /**
+     * Gets the effective level of a research technology for this player.
+     */
+    public function getEffectiveResearchLevel(string $machine_name): int
+    {
+        $researchLevel = $this->getResearchLevel($machine_name);
+
+        if ($machine_name !== 'espionage_technology') {
+            return $researchLevel;
+        }
+
+        $bonus = 0;
+
+        if ($this->hasTechnocrat()) {
+            $bonus += 2;
+        }
+
+        if ($this->hasCommandingStaff()) {
+            $bonus += 1;
+        }
+
+        return $researchLevel + $bonus;
+    }
+
+    public function hasEspionageCapability(): bool
+    {
+        return $this->getResearchLevel('espionage_technology') > 0;
+    }
+
+    /**
      * Set the level of a research technology for this player.
      *
      * @param string $machine_name
@@ -550,6 +580,14 @@ class PlayerService
         $user = $this->getUser();
         $fleet_slots_bonus = $characterClassService->getAdditionalFleetSlots($user);
 
+        if ($this->hasAdmiral()) {
+            $fleet_slots_bonus += 2;
+        }
+
+        if ($this->hasCommandingStaff()) {
+            $fleet_slots_bonus += 1;
+        }
+
         return $fleet_slots_from_research + $fleet_slots_bonus;
     }
 
@@ -594,6 +632,10 @@ class PlayerService
         $characterClassService = app(CharacterClassService::class);
         $user = $this->getUser();
         $expedition_slots_bonus = $characterClassService->getExpeditionSlotsBonus($user);
+
+        if ($this->hasAdmiral()) {
+            $expedition_slots_bonus += 1;
+        }
 
         return $expedition_slots_from_research + $bonus_slots + $expedition_slots_bonus;
     }
@@ -934,32 +976,27 @@ class PlayerService
 
     public function hasCommander(): bool
     {
-        // TODO: add logic
-        return false;
+        return $this->user->isOfficerActive(OfficerType::COMMANDER);
     }
 
     public function hasAdmiral(): bool
     {
-        // TODO: add logic
-        return false;
+        return $this->user->isOfficerActive(OfficerType::ADMIRAL);
     }
 
     public function hasEngineer(): bool
     {
-        // TODO: add logic
-        return false;
+        return $this->user->isOfficerActive(OfficerType::ENGINEER);
     }
 
     public function hasGeologist(): bool
     {
-        // TODO: add logic
-        return false;
+        return $this->user->isOfficerActive(OfficerType::GEOLOGIST);
     }
 
     public function hasTechnocrat(): bool
     {
-        // TODO: add logic
-        return false;
+        return $this->user->isOfficerActive(OfficerType::TECHNOCRAT);
     }
 
     public function hasCommandingStaff(): bool

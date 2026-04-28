@@ -2,9 +2,16 @@
 
 namespace OGame\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\View\View;
+use OGame\Enums\OfficerType;
+use OGame\Facades\AppUtil;
+use OGame\Models\User;
+use OGame\Services\PlayerService;
+use OGame\Services\PremiumOfficerService;
+use RuntimeException;
 
 class PremiumController extends OGameController
 {
@@ -13,16 +20,16 @@ class PremiumController extends OGameController
      *
      * @return View
      */
-    public function index(Request $request): View
+    public function index(Request $request, PlayerService $playerService, PremiumOfficerService $premiumOfficerService): View
     {
         $this->setBodyId('premium');
 
-        // Get current user's dark matter balance
-        $darkMatter = Auth::user()->dark_matter ?? 0;
-        $officers = $this->getOfficerCatalog();
+        $user = $playerService->getUser();
+        $officers = $this->buildOfficerCatalog($user, $premiumOfficerService);
 
         return view('ingame.premium.index', [
-            'darkMatter' => $darkMatter,
+            'darkMatter' => $playerService->getDarkMatter(),
+            'officers' => $officers,
             'initialOfficerRef' => $this->resolveInitialOfficerRef($request, $officers),
         ]);
     }
@@ -30,9 +37,9 @@ class PremiumController extends OGameController
     /**
      * Returns the premium detail panel for the selected officer.
      */
-    public function detail(Request $request): View
+    public function detail(Request $request, PlayerService $playerService, PremiumOfficerService $premiumOfficerService): View
     {
-        $officers = $this->getOfficerCatalog();
+        $officers = $this->buildOfficerCatalog($playerService->getUser(), $premiumOfficerService);
         $officerRef = (string) $request->query('type', '');
 
         abort_unless(isset($officers[$officerRef]), 404);
@@ -43,52 +50,38 @@ class PremiumController extends OGameController
     }
 
     /**
+     * Processes an officer hire / extension purchase.
+     */
+    public function purchase(Request $request, PlayerService $playerService, PremiumOfficerService $premiumOfficerService): RedirectResponse
+    {
+        $officer = OfficerType::fromPremiumRef((string) $request->input('type', ''));
+
+        abort_unless($officer !== null, 404);
+
+        try {
+            $premiumOfficerService->purchase($playerService->getUser(), $officer);
+        } catch (RuntimeException $exception) {
+            return redirect()->route('premium.index', ['openDetail' => $officer->premiumRef()])
+                ->with('error', $exception->getMessage());
+        }
+
+        return redirect()->route('premium.index', ['openDetail' => $officer->premiumRef()]);
+    }
+
+    /**
      * @return array<string, array<string, mixed>>
      */
-    private function getOfficerCatalog(): array
+    private function buildOfficerCatalog(User $user, PremiumOfficerService $premiumOfficerService): array
     {
-        return [
+        $officers = [
             '1' => [
                 'ref' => '1',
                 'title' => __('t_ingame.layout.res_dark_matter'),
                 'image_class' => 'darkMatter',
                 'description' => __('t_ingame.premium.intro_text'),
                 'benefits' => [],
-            ],
-            '2' => [
-                'ref' => '2',
-                'title' => $this->extractOfficerTitle(__('t_ingame.premium.info_commander')),
-                'image_class' => 'commander',
-                'description' => __('t_ingame.premium.intro_text'),
-                'benefits' => $this->extractTooltipBenefits(__('t_ingame.premium.hire_commander_tooltip')),
-            ],
-            '3' => [
-                'ref' => '3',
-                'title' => $this->extractOfficerTitle(__('t_ingame.premium.info_admiral')),
-                'image_class' => 'admiral',
-                'description' => __('t_ingame.premium.intro_text'),
-                'benefits' => $this->extractTooltipBenefits(__('t_ingame.premium.hire_admiral_tooltip')),
-            ],
-            '4' => [
-                'ref' => '4',
-                'title' => $this->extractOfficerTitle(__('t_ingame.premium.info_engineer')),
-                'image_class' => 'engineer',
-                'description' => __('t_ingame.premium.intro_text'),
-                'benefits' => $this->extractTooltipBenefits(__('t_ingame.premium.hire_engineer_tooltip')),
-            ],
-            '5' => [
-                'ref' => '5',
-                'title' => $this->extractOfficerTitle(__('t_ingame.premium.info_geologist')),
-                'image_class' => 'geologist',
-                'description' => __('t_ingame.premium.intro_text'),
-                'benefits' => $this->extractTooltipBenefits(__('t_ingame.premium.hire_geologist_tooltip')),
-            ],
-            '6' => [
-                'ref' => '6',
-                'title' => $this->extractOfficerTitle(__('t_ingame.premium.info_technocrat')),
-                'image_class' => 'technocrat',
-                'description' => __('t_ingame.premium.intro_text'),
-                'benefits' => $this->extractTooltipBenefits(__('t_ingame.premium.hire_technocrat_tooltip')),
+                'meta' => [],
+                'show_payment_overlay' => true,
             ],
             '12' => [
                 'ref' => '12',
@@ -101,8 +94,64 @@ class PremiumController extends OGameController
                     __('t_ingame.premium.benefit_mines'),
                     __('t_ingame.premium.benefit_espionage'),
                 ],
+                'meta' => [__('t_ingame.premium.remaining_officers', [
+                    'current' => $user->getActiveOfficerCount(),
+                    'max' => count(OfficerType::cases()),
+                ])],
+                'active_count' => $user->getActiveOfficerCount(),
+                'max_count' => count(OfficerType::cases()),
+                'show_payment_overlay' => false,
+                'purchasable' => false,
             ],
         ];
+
+        $now = Date::now();
+
+        foreach ($premiumOfficerService->getOffers() as $offer) {
+            $officer = $offer['type'];
+            $tooltip = __('t_ingame.premium.' . $officer->tooltipTranslationKey());
+            $isActive = $user->isOfficerActive($officer);
+            $expiresAt = $user->getOfficerUntil($officer);
+            $remainingSeconds = $expiresAt !== null
+                ? max(0, $expiresAt->getTimestamp() - $now->getTimestamp())
+                : 0;
+            $canAfford = $premiumOfficerService->canAfford($user, $officer);
+            $meta = [
+                AppUtil::formatTimeDuration($offer['duration_seconds']),
+                number_format($offer['price'], 0, ',', '.') . ' ' . __('t_ingame.dark_matter'),
+            ];
+
+            if ($isActive && $expiresAt !== null) {
+                array_unshift($meta, AppUtil::formatTimeDuration($remainingSeconds));
+            }
+
+            $officers[$offer['ref']] = [
+                'ref' => $offer['ref'],
+                'officer_type' => $officer->value,
+                'title' => $this->extractOfficerTitle(__('t_ingame.premium.' . $officer->infoTranslationKey())),
+                'image_class' => $officer->imageClass(),
+                'description' => __('t_ingame.premium.intro_text'),
+                'benefits' => $this->extractTooltipBenefits($tooltip),
+                'meta' => $meta,
+                'offer' => [
+                    'price' => $offer['price'],
+                    'currency' => 'dark_matter',
+                    'duration_seconds' => $offer['duration_seconds'],
+                ],
+                'status' => [
+                    'is_active' => $isActive,
+                    'can_afford' => $canAfford,
+                    'expires_at' => $expiresAt?->toIso8601String(),
+                    'remaining_seconds' => $remainingSeconds,
+                ],
+                'purchasable' => true,
+                'show_payment_overlay' => false,
+                'can_afford' => $canAfford,
+                'action_label' => $isActive ? __('t_ingame.loca_buy_extend') : $this->extractTooltipAction($tooltip),
+            ];
+        }
+
+        return $officers;
     }
 
     /**
@@ -124,6 +173,13 @@ class PremiumController extends OGameController
         $parts = explode(':', $title, 2);
 
         return trim(end($parts));
+    }
+
+    private function extractTooltipAction(string $tooltip): string
+    {
+        $parts = explode('|', strip_tags($tooltip), 2);
+
+        return trim($parts[0] ?? '');
     }
 
     /**

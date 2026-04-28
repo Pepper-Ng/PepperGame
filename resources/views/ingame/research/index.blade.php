@@ -73,7 +73,7 @@
                     <script type="text/javascript">
                         var scheduleBuildListEntryUrl = '{{ route('research.addbuildrequest.post') }}';
                         var LOCA_ERROR_INQUIRY_NOT_WORKED_TRYAGAIN = @json(__('t_ingame.buildings.last_inquiry_error'));
-                        redirectPremiumLink = '#TODO_index.php?page=premium&showDarkMatter=1'
+                        redirectPremiumLink = '{{ route('premium.index', ['showDarkMatter' => 1]) }}';
                     </script>
                 </div>
             </div>

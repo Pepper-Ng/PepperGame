@@ -280,8 +280,8 @@
             var warningsEnabled = true;
 
             var playerId = {{ $player->getId() }};
-            var hasAdmiral = false;
-            var hasCommander = false;
+            var hasAdmiral = @json($player->hasAdmiral());
+            var hasCommander = @json($player->hasCommander());
             var isOnVacation = false;
 
             var moveInProgress = false;

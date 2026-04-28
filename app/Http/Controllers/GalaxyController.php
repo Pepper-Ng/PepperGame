@@ -364,9 +364,8 @@ class GalaxyController extends OGameController
      */
     private function getPlanetActions(PlanetService $planet, int $galaxy, int $system, int $position, PhalanxService $phalanxService): array
     {
-        // Check if the current planet of the player has enough espionage probes and research level
-        // to be able to spy on the target planet.
-        $canEspionage = $this->playerService->planets->current()->getObjectAmount('espionage_probe') > 0 && $this->playerService->getResearchLevel('espionage_technology') > 0;
+        // Espionage requires probes plus the actual technology unlock.
+        $canEspionage = $this->playerService->planets->current()->getObjectAmount('espionage_probe') > 0 && $this->playerService->hasEspionageCapability();
 
         // Check if current planet is a moon with sensor phalanx and target is in range
         // Note: Moons cannot be scanned (OGame rule)
@@ -722,24 +721,24 @@ class GalaxyController extends OGameController
                 'canFly' => true,
                 'canSendSystemDiscovery' => true,
                 'canSwitchGalaxy' => true,
-                'canSystemEspionage' => false,
+                'canSystemEspionage' => $canEspionage,
                 'canSystemPhalanx' => $can_system_phalanx,
                 'currentPlanetId' => $planet->getPlanetId(),
                 'deuteriumInDebris' => true,
                 'galaxy' => $galaxy,
                 'system' => $system,
                 'galaxyContent' => $galaxyContent,
-                'hasAdmiral' => false,
+                'hasAdmiral' => $player->hasAdmiral(),
                 'hasBirthdayPlanet' => false,
                 'isOutlaw' => false,
-                'maximumFleetSlots' => 13,
+                'maximumFleetSlots' => $player->getFleetSlotsMax(),
                 'playerId' => $player->getId(),
                 'settingsProbeCount' => 3,
                 'showOutlawWarning' => true,
                 'slotsColonized' => $slotsColonized,
                 'switchGalaxyDeuteriumCosts' => 10,
                 'toGalaxyLink' => route('galaxy.index', ['galaxy' => $galaxy, 'system' => $system]),
-                'usedFleetSlots' => 1
+                'usedFleetSlots' => $player->getFleetSlotsInUse()
             ],
         ]);
     }
