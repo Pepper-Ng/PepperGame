@@ -121,6 +121,10 @@ ensure_runtime_ownership() {
     chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 }
 
+clear_bootstrap_caches() {
+    rm -f /var/www/bootstrap/cache/*.php
+}
+
 if [ ! -f /var/www/.env ]; then
     if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
         create_env_file_from_environment
@@ -157,6 +161,9 @@ elif [ "$role" = "reverb" ]; then
 elif [ "$role" = "app" ]; then
     ensure_runtime_directories
     ensure_runtime_ownership
+
+    # Remove stale bootstrap cache files before composer or artisan boot Laravel.
+    clear_bootstrap_caches
 
     # Check APP_ENV and run appropriate composer install
     if [ "$is_production" = true ]; then
