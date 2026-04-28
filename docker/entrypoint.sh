@@ -22,6 +22,21 @@ normalize_app_key_value() {
     esac
 
     case "$value" in
+        *'=\\"\\"')
+            value=$(printf '%s' "$value" | sed 's/\\"\\"$//')
+            ;;
+        *'=""')
+            value=$(printf '%s' "$value" | sed 's/""$//')
+            ;;
+        *"=\\'\\'")
+            value=$(printf '%s' "$value" | sed "s/\\\\'\\\\'$//")
+            ;;
+        *"=''" )
+            value=$(printf '%s' "$value" | sed "s/''$//")
+            ;;
+    esac
+
+    case "$value" in
         '""'|"''"|'\\"\\"'|"\\'\\'" )
             value=""
             ;;
@@ -33,8 +48,31 @@ normalize_app_key_value() {
 write_env_var() {
     key="$1"
     value="$2"
+
+    if [ -z "$value" ]; then
+        printf '%s=\n' "$key" >> /var/www/.env
+        return
+    fi
+
+    if [ "$key" = "APP_KEY" ]; then
+        printf '%s=%s\n' "$key" "$value" >> /var/www/.env
+        return
+    fi
+
     escaped_value=$(printf '%s' "$value" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\$/\\$/g')
     printf '%s="%s"\n' "$key" "$escaped_value" >> /var/www/.env
+}
+
+set_env_var_raw() {
+    key="$1"
+    value="$2"
+    escaped_value=$(printf '%s' "$value" | sed 's/[\\&|]/\\&/g')
+
+    if grep -q "^${key}=" /var/www/.env; then
+        sed -i "s|^${key}=.*|${key}=${escaped_value}|" /var/www/.env
+    else
+        printf '%s=%s\n' "$key" "$value" >> /var/www/.env
+    fi
 }
 
 read_dotenv_value() {
@@ -48,7 +86,7 @@ create_env_file_from_environment() {
     app_key_value=$(normalize_app_key_value "${APP_KEY:-}")
 
     if [ -z "$app_key_value" ] && [ -f "$generated_app_key_file" ]; then
-        app_key_value=$(tr -d '\r\n' < "$generated_app_key_file")
+        app_key_value=$(normalize_app_key_value "$(tr -d '\r\n' < "$generated_app_key_file")")
     fi
 
     : > /var/www/.env
@@ -121,6 +159,15 @@ ensure_runtime_ownership() {
     chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 }
 
+clear_bootstrap_caches() {
+    rm -f /var/www/bootstrap/cache/*.php
+}
+
+canonicalize_app_key_env_line() {
+    app_key=$(read_dotenv_value "APP_KEY")
+    set_env_var_raw "APP_KEY" "$app_key"
+}
+
 if [ ! -f /var/www/.env ]; then
     if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
         create_env_file_from_environment
@@ -158,6 +205,12 @@ elif [ "$role" = "app" ]; then
     ensure_runtime_directories
     ensure_runtime_ownership
 
+    # Repair legacy quoted-empty or malformed APP_KEY values before Laravel boots.
+    canonicalize_app_key_env_line
+
+    # Remove stale bootstrap cache files before composer or artisan boot Laravel.
+    clear_bootstrap_caches
+
     # Check APP_ENV and run appropriate composer install
     if [ "$is_production" = true ]; then
         echo "Production environment detected. Running composer install --no-dev..."
@@ -173,6 +226,7 @@ elif [ "$role" = "app" ]; then
         echo "APP_KEY is empty or not set. Generating a new key..."
         php artisan key:generate --force
         app_key=$(read_dotenv_value "APP_KEY")
+        set_env_var_raw "APP_KEY" "$app_key"
     else
         echo "APP_KEY is set to: $app_key"
     fi
