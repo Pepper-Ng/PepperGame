@@ -136,4 +136,18 @@
         </div>
     </div>
 
+    <script type="text/javascript">
+        detailUrl = {!! json_encode(route('premium.detail')) !!};
+
+        $(function () {
+            @if (!empty($initialOfficerRef))
+            var $initialOfficer = $('.slideIn[ref={{ json_encode($initialOfficerRef) }}]');
+
+            if ($initialOfficer.length) {
+                $initialOfficer.trigger('click');
+            }
+            @endif
+        });
+    </script>
+
 @endsection

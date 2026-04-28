@@ -49,6 +49,9 @@ RUN if [ $OPCACHE_ENABLE = "1" ]; then \
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Copy runtime PHP configuration so image-based deployments do not depend on bind mounts.
+COPY php/local.ini /usr/local/etc/php/conf.d/local.ini
+
 # Copy necessary folders with correct permissions in a single layer
 COPY --chown=www-data:www-data \
     storage \
