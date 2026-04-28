@@ -168,8 +168,8 @@ elif [ "$role" = "app" ]; then
     chmod +x ./rust/compile.sh
     ./rust/compile.sh
 
-    # Ensure storage directory has correct ownership for www-data
-    chown -R www-data:www-data /var/www/storage
+    # Ensure writable runtime directories are owned by www-data
+    chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
     # Run migrations as www-data to ensure log files are created with correct ownership
     su -s /bin/sh -c "php artisan migrate --force" www-data

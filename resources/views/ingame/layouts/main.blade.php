@@ -306,23 +306,23 @@
                 </a>
             </div>
             <div id="officers" class="  fright">
-                <a href="#TODO_=premium&amp;openDetail=2" class="tooltipHTML   commander js_hideTipOnMobile "
+                <a href="{{ route('premium.index', ['openDetail' => 2]) }}" class="tooltipHTML   commander js_hideTipOnMobile "
                    title="{!! __('t_ingame.premium.hire_commander_tooltip') !!}">
                     <img src="/img/layout/pixel.gif" width="30" height="30">
                 </a>
-                <a href="#TODO_page=premium&amp;openDetail=3" class="tooltipHTML    admiral js_hideTipOnMobile "
+                <a href="{{ route('premium.index', ['openDetail' => 3]) }}" class="tooltipHTML    admiral js_hideTipOnMobile "
                    title="{!! __('t_ingame.premium.hire_admiral_tooltip') !!}">
                     <img src="/img/layout/pixel.gif" width="30" height="30">
                 </a>
-                <a href="#TODO_page=premium&amp;openDetail=4" class="tooltipHTML    engineer js_hideTipOnMobile "
+                <a href="{{ route('premium.index', ['openDetail' => 4]) }}" class="tooltipHTML    engineer js_hideTipOnMobile "
                    title="{!! __('t_ingame.premium.hire_engineer_tooltip') !!}">
                     <img src="/img/layout/pixel.gif" width="30" height="30">
                 </a>
-                <a href="#TODO_page=premium&amp;openDetail=5" class="tooltipHTML    geologist js_hideTipOnMobile "
+                <a href="{{ route('premium.index', ['openDetail' => 5]) }}" class="tooltipHTML    geologist js_hideTipOnMobile "
                    title="{!! __('t_ingame.premium.hire_geologist_tooltip') !!}">
                     <img src="/img/layout/pixel.gif" width="30" height="30">
                 </a>
-                <a href="#TODO_page=premium&amp;openDetail=6" class="tooltipHTML    technocrat js_hideTipOnMobile "
+                <a href="{{ route('premium.index', ['openDetail' => 6]) }}" class="tooltipHTML    technocrat js_hideTipOnMobile "
                    title="{!! __('t_ingame.premium.hire_technocrat_tooltip') !!}">
                     <img src="/img/layout/pixel.gif" width="30" height="30">
                 </a>
@@ -736,7 +736,7 @@
                 var timerHandler = new TimerHandler();
 
                 function redirectPremium() {
-                    location.href = "{{ route('premium.index', ['showDarkMatter' => 1]) }}#TODO_premium&showDarkMatter=1";
+                    location.href = "{{ route('premium.index', ['showDarkMatter' => 1]) }}";
                 }
 
                 var playerId = "{{ $currentPlayer->getId() }}";

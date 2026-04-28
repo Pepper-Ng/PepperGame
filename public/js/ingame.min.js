@@ -71698,7 +71698,13 @@ Missile.prototype.onDestroyMissiles = function (response) {
 };
 $(function () {
   $('.slideIn').on('click', function () {
-    loadDetails($(this).data('type'));
+    var detailType = $(this).data('type');
+
+    if (typeof detailType === 'undefined') {
+      return;
+    }
+
+    loadDetails(detailType);
   });
   $('#detail').on('click', '.close_details', function () {
     $('#detail').hide();

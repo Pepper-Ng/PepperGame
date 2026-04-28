@@ -198,7 +198,9 @@ Route::middleware(['auth', 'banned', 'globalgame', 'locale', 'firstlogin'])->gro
     Route::post('/alliance/text/update', [AllianceController::class, 'updateAllianceText'])->name('alliance.text.update');
 
     Route::get('/premium', [PremiumController::class, 'index'])->name('premium.index');
+    Route::get('/premium/detail', [PremiumController::class, 'detail'])->name('premium.detail');
     Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+    Route::get('/shop/detail', [ShopController::class, 'detail'])->name('shop.detail');
 
     // Character Class
     Route::get('/characterclass', [CharacterClassController::class, 'index'])->name('characterclass.index');
