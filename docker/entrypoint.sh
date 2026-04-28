@@ -163,6 +163,19 @@ clear_bootstrap_caches() {
     rm -f /var/www/bootstrap/cache/*.php
 }
 
+warm_production_caches() {
+    if ! su -s /bin/sh -c "php artisan cache:clear" www-data; then
+        echo "Warning: application cache clear failed; starting without warmed caches."
+        clear_bootstrap_caches
+        return 0
+    fi
+
+    if ! su -s /bin/sh -c "php artisan config:cache && php artisan route:cache && php artisan view:cache" www-data; then
+        echo "Warning: production cache warmup failed; clearing bootstrap caches to avoid broken runtime cache files."
+        clear_bootstrap_caches
+    fi
+}
+
 canonicalize_app_key_env_line() {
     app_key=$(read_dotenv_value "APP_KEY")
     set_env_var_raw "APP_KEY" "$app_key"
@@ -248,7 +261,7 @@ elif [ "$role" = "app" ]; then
     # Only run caching in production (as www-data to ensure correct file ownership)
     if [ "$is_production" = true ]; then
         echo "Production environment: Caching configurations..."
-        su -s /bin/sh -c "php artisan cache:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache" www-data
+        warm_production_caches
     fi
 
     exec php-fpm
