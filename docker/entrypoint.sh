@@ -3,6 +3,33 @@
 role=${CONTAINER_ROLE:-none}
 generated_app_key_file=/var/www/storage/app_key
 
+normalize_app_key_value() {
+    value="$1"
+
+    case "$value" in
+        '""'|"''"|'\\"\\"'|"\\'\\'" )
+            value=""
+            ;;
+    esac
+
+    case "$value" in
+        \"*\")
+            value=$(printf '%s' "$value" | sed 's/^"//; s/"$//')
+            ;;
+        \'*\')
+            value=$(printf '%s' "$value" | sed "s/^'//; s/'$//")
+            ;;
+    esac
+
+    case "$value" in
+        '""'|"''"|'\\"\\"'|"\\'\\'" )
+            value=""
+            ;;
+    esac
+
+    printf '%s' "$value"
+}
+
 write_env_var() {
     key="$1"
     value="$2"
@@ -14,26 +41,11 @@ read_dotenv_value() {
     key="$1"
     value=$(grep -E "^${key}=" .env | cut -d '=' -f2- | tr -d '\r')
 
-    case "$value" in
-        "\"\"")
-            value=""
-            ;;
-        "''")
-            value=""
-            ;;
-        \"*\")
-            value=$(printf '%s' "$value" | sed 's/^"//; s/"$//')
-            ;;
-        \'*\')
-            value=$(printf '%s' "$value" | sed "s/^'//; s/'$//")
-            ;;
-    esac
-
-    printf '%s' "$value"
+    normalize_app_key_value "$value"
 }
 
 create_env_file_from_environment() {
-    app_key_value="${APP_KEY:-}"
+    app_key_value=$(normalize_app_key_value "${APP_KEY:-}")
 
     if [ -z "$app_key_value" ] && [ -f "$generated_app_key_file" ]; then
         app_key_value=$(tr -d '\r\n' < "$generated_app_key_file")
@@ -105,6 +117,10 @@ ensure_runtime_directories() {
         /var/www/bootstrap/cache
 }
 
+ensure_runtime_ownership() {
+    chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+}
+
 if [ ! -f /var/www/.env ]; then
     if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
         create_env_file_from_environment
@@ -140,6 +156,7 @@ elif [ "$role" = "reverb" ]; then
     php /var/www/artisan reverb:start --host="${REVERB_SERVER_HOST:-0.0.0.0}" --port="${REVERB_SERVER_PORT:-8090}"
 elif [ "$role" = "app" ]; then
     ensure_runtime_directories
+    ensure_runtime_ownership
 
     # Check APP_ENV and run appropriate composer install
     if [ "$is_production" = true ]; then
@@ -168,8 +185,8 @@ elif [ "$role" = "app" ]; then
     chmod +x ./rust/compile.sh
     ./rust/compile.sh
 
-    # Ensure writable runtime directories are owned by www-data
-    chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+    # Re-apply runtime ownership after build steps created files as root.
+    ensure_runtime_ownership
 
     # Run migrations as www-data to ensure log files are created with correct ownership
     su -s /bin/sh -c "php artisan migrate --force" www-data
