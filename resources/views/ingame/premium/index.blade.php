@@ -149,7 +149,7 @@
             gfSlider = new GFSlider(getElementByIdWithCache('planet'));
 
             @if (!empty($initialOfficerRef))
-            var $initialOfficer = $('.slideIn[ref={{ json_encode($initialOfficerRef) }}]');
+            var $initialOfficer = $('.slideIn[ref={!! json_encode($initialOfficerRef) !!}]');
 
             if ($initialOfficer.length) {
                 $initialOfficer.trigger('click');
