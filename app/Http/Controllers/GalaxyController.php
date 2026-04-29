@@ -692,6 +692,7 @@ class GalaxyController extends OGameController
         }
 
         $planet = $player->planets->current();
+        $canEspionage = $planet->getObjectAmount('espionage_probe') > 0 && $player->hasEspionageCapability();
         $galaxy = $request->input('galaxy');
         $system = $request->input('system');
         $galaxyContent = $this->getGalaxyArray($galaxy, $system, $player, $planetServiceFactory, $phalanxService);

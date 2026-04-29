@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\View\View;
 use OGame\Enums\OfficerType;
 use OGame\Facades\AppUtil;
-use OGame\Models\User;
 use OGame\Services\PlayerService;
 use OGame\Services\PremiumOfficerService;
 use RuntimeException;
@@ -24,8 +23,7 @@ class PremiumController extends OGameController
     {
         $this->setBodyId('premium');
 
-        $user = $playerService->getUser();
-        $officers = $this->buildOfficerCatalog($user, $premiumOfficerService);
+        $officers = $this->buildOfficerCatalog($playerService, $premiumOfficerService);
 
         return view('ingame.premium.index', [
             'darkMatter' => $playerService->getDarkMatter(),
@@ -39,7 +37,7 @@ class PremiumController extends OGameController
      */
     public function detail(Request $request, PlayerService $playerService, PremiumOfficerService $premiumOfficerService): View
     {
-        $officers = $this->buildOfficerCatalog($playerService->getUser(), $premiumOfficerService);
+        $officers = $this->buildOfficerCatalog($playerService, $premiumOfficerService);
         $officerRef = (string) $request->query('type', '');
 
         abort_unless(isset($officers[$officerRef]), 404);
@@ -71,8 +69,10 @@ class PremiumController extends OGameController
     /**
      * @return array<string, array<string, mixed>>
      */
-    private function buildOfficerCatalog(User $user, PremiumOfficerService $premiumOfficerService): array
+    private function buildOfficerCatalog(PlayerService $playerService, PremiumOfficerService $premiumOfficerService): array
     {
+        $user = $playerService->getUser();
+
         $officers = [
             '1' => [
                 'ref' => '1',
@@ -100,6 +100,9 @@ class PremiumController extends OGameController
                 ])],
                 'active_count' => $user->getActiveOfficerCount(),
                 'max_count' => count(OfficerType::cases()),
+                'status' => [
+                    'is_active' => $playerService->hasCommandingStaff(),
+                ],
                 'show_payment_overlay' => false,
                 'purchasable' => false,
             ],

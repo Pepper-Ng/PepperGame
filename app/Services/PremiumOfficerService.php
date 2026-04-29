@@ -6,8 +6,10 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use OGame\Enums\OfficerType;
+use OGame\Factories\PlayerServiceFactory;
 use OGame\Models\User;
 use RuntimeException;
+use Throwable;
 
 class PremiumOfficerService
 {
@@ -17,6 +19,7 @@ class PremiumOfficerService
     public function __construct(
         private readonly SettingsService $settingsService,
         private readonly DarkMatterTransactionService $darkMatterTransactionService,
+        private readonly PlayerServiceFactory $playerServiceFactory,
     ) {
     }
 
@@ -103,6 +106,12 @@ class PremiumOfficerService
 
         $user->refresh();
 
+        try {
+            $this->refreshPlanetProductionCache($user->id);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+
         return $result;
     }
 
@@ -118,5 +127,18 @@ class PremiumOfficerService
         $default = max(1, (int) $this->settingsService->get('premium_officer_duration_seconds', self::DEFAULT_DURATION_SECONDS));
 
         return max(1, (int) $this->settingsService->get('premium_' . $officer->value . '_duration_seconds', $default));
+    }
+
+    private function refreshPlanetProductionCache(int $userId): void
+    {
+        $playerService = $this->playerServiceFactory->make($userId, true);
+
+        foreach ($playerService->planets->allPlanets() as $planet) {
+            try {
+                $planet->updateResourceProductionStats();
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
     }
 }

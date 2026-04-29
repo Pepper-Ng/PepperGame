@@ -3054,8 +3054,9 @@ a:hover img.queuePic { border-color: #E7AE46;}
     text-decoration:none;
 }
 
-.no-touch #premium #box #buttonz ul#building li a.detail_button:hover,
-#premium #box #buttonz ul#building li a.active {
+.no-touch #premium #buttonz ul#building li a.detail_button:hover,
+#premium #buttonz ul#building li a.active,
+#premium #buttonz ul#building li.officer-active a.detail_button {
     background:url("/img/icons/ce2e012805bae16d3bc0967600eb58.gif") no-repeat;
     color:#ff9600;
     text-decoration:none;

@@ -51,7 +51,7 @@
                                 </a>
                             </div>
                         </div>			</li>
-                    <li class="button" id="button2">
+                    <li class="button{{ !empty($officers['2']['status']['is_active']) ? ' officer-active' : '' }}" id="button2">
                         <div class="premium">
                             <div class="officers100  commander">
                                 <a tabindex="2" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_commander') }}" ref="2" class="detail_button tooltip js_hideTipOnMobile slideIn">
@@ -64,7 +64,7 @@
                             </div>
                         </div>
                     </li>
-                    <li class="button" id="button3">
+                    <li class="button{{ !empty($officers['3']['status']['is_active']) ? ' officer-active' : '' }}" id="button3">
                         <div class="premium">
                             <div class="officers100  admiral">
                                 <a tabindex="3" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_admiral') }}" ref="3" class="detail_button tooltip js_hideTipOnMobile slideIn">
@@ -77,7 +77,7 @@
                             </div>
                         </div>
                     </li>
-                    <li class="button" id="button4">
+                    <li class="button{{ !empty($officers['4']['status']['is_active']) ? ' officer-active' : '' }}" id="button4">
                         <div class="premium">
                             <div class="officers100  engineer">
                                 <a tabindex="4" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_engineer') }}" ref="4" class="detail_button tooltip js_hideTipOnMobile slideIn">
@@ -90,7 +90,7 @@
                             </div>
                         </div>
                     </li>
-                    <li class="button" id="button5">
+                    <li class="button{{ !empty($officers['5']['status']['is_active']) ? ' officer-active' : '' }}" id="button5">
                         <div class="premium">
                             <div class="officers100  geologist">
                                 <a tabindex="5" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_geologist') }}" ref="5" class="detail_button tooltip js_hideTipOnMobile slideIn">
@@ -103,7 +103,7 @@
                             </div>
                         </div>
                     </li>
-                    <li class="button" id="button6">
+                    <li class="button{{ !empty($officers['6']['status']['is_active']) ? ' officer-active' : '' }}" id="button6">
                         <div class="premium">
                             <div class="officers100  technocrat">
                                 <a tabindex="6" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_technocrat') }}" ref="6" class="detail_button tooltip js_hideTipOnMobile slideIn">
@@ -116,7 +116,7 @@
                             </div>
                         </div>
                     </li>
-                    <li class="button" id="button12">
+                    <li class="button{{ !empty($officers['12']['status']['is_active']) ? ' officer-active' : '' }}" id="button12">
                         <div class="premium">
                             <div class="officers100  allOfficers">
                                 <a tabindex="12" href="javascript:void(0);" title="{{ __('t_ingame.premium.info_commanding_staff') }}" ref="12" class="detail_button tooltip js_hideTipOnMobile slideIn">

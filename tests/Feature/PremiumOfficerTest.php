@@ -4,7 +4,13 @@ namespace Tests\Feature;
 
 use OGame\Enums\DarkMatterTransactionType;
 use OGame\Enums\OfficerType;
+use OGame\Factories\PlayerServiceFactory;
+use OGame\Models\Planet;
+use OGame\Services\PlanetListService;
+use OGame\Services\PlanetService;
+use OGame\Services\PlayerService;
 use OGame\Services\SettingsService;
+use RuntimeException;
 use Tests\AccountTestCase;
 
 class PremiumOfficerTest extends AccountTestCase
@@ -73,6 +79,86 @@ class PremiumOfficerTest extends AccountTestCase
         $this->assertNull($user->engineer_until);
     }
 
+    public function testGeologistPurchaseRefreshesCachedProductionTotals(): void
+    {
+        $user = $this->playerService->getUser();
+        $user->dark_matter = 10000;
+        $user->save();
+
+        $this->planetSetObjectLevel('metal_mine', 12);
+        $this->planetSetObjectLevel('crystal_mine', 10);
+        $this->planetSetObjectLevel('deuterium_synthesizer', 8);
+        $this->planetSetObjectLevel('solar_plant', 30);
+
+        $planet = Planet::query()->findOrFail($this->planetService->getPlanetId());
+
+        $metalBeforePurchase = $planet->metal_production;
+        $crystalBeforePurchase = $planet->crystal_production;
+        $deuteriumBeforePurchase = $planet->deuterium_production;
+
+        $response = $this->post('/premium/purchase', [
+            'type' => OfficerType::GEOLOGIST->premiumRef(),
+        ]);
+
+        $response->assertRedirect(route('premium.index', ['openDetail' => OfficerType::GEOLOGIST->premiumRef()]));
+
+        $planet->refresh();
+
+        $this->assertGreaterThan($metalBeforePurchase, $planet->metal_production);
+        $this->assertGreaterThan($crystalBeforePurchase, $planet->crystal_production);
+        $this->assertGreaterThan($deuteriumBeforePurchase, $planet->deuterium_production);
+    }
+
+    public function testOfficerPurchaseStillSucceedsWhenProductionRefreshFails(): void
+    {
+        $user = $this->playerService->getUser();
+        $user->dark_matter = 10000;
+        $user->save();
+
+        $throwingPlanet = \Mockery::mock(PlanetService::class);
+        $throwingPlanet->shouldReceive('updateResourceProductionStats')
+            ->once()
+            ->andThrow(new RuntimeException('production refresh failed'));
+
+        $healthyPlanet = \Mockery::mock(PlanetService::class);
+        $healthyPlanet->shouldReceive('updateResourceProductionStats')
+            ->once();
+
+        $throwingPlanetList = \Mockery::mock(PlanetListService::class);
+        $throwingPlanetList->shouldReceive('allPlanets')
+            ->once()
+            ->andReturn([$throwingPlanet, $healthyPlanet]);
+
+        $throwingPlayerService = new PlayerService();
+        $throwingPlayerService->planets = $throwingPlanetList;
+
+        $this->partialMock(PlayerServiceFactory::class, function ($mock) use ($throwingPlayerService, $user): void {
+            $mock->shouldReceive('make')
+                ->once()
+                ->with($user->id, true)
+                ->andReturn($throwingPlayerService);
+        });
+
+        $response = $this->post('/premium/purchase', [
+            'type' => OfficerType::GEOLOGIST->premiumRef(),
+        ]);
+
+        $response->assertRedirect(route('premium.index', ['openDetail' => OfficerType::GEOLOGIST->premiumRef()]));
+
+        $user->refresh();
+
+        $this->assertSame(6500, $user->dark_matter);
+        $this->assertNotNull($user->geologist_until);
+        $this->assertTrue($user->isOfficerActive(OfficerType::GEOLOGIST));
+
+        $this->assertDatabaseHas('dark_matter_transactions', [
+            'user_id' => $user->id,
+            'amount' => -3500,
+            'type' => DarkMatterTransactionType::GEOLOGIST->value,
+            'balance_after' => 6500,
+        ]);
+    }
+
     public function testTechnocratDoesNotGrantBaseEspionageCapabilityInGalaxyState(): void
     {
         $this->planetAddUnit('espionage_probe', 1);
@@ -120,6 +206,27 @@ class PremiumOfficerTest extends AccountTestCase
         $this->assertTrue($this->playerService->hasCommandingStaff());
         $this->assertSame(4, $this->playerService->getEffectiveResearchLevel('espionage_technology'));
         $this->assertSame($baseFleetSlots + 3, $this->playerService->getFleetSlotsMax());
+    }
+
+    public function testPremiumCatalogMarksCommandingStaffActiveOnlyWhenAllOfficersAreActive(): void
+    {
+        $this->activateOfficers(OfficerType::COMMANDER);
+
+        $response = $this->get('/premium');
+
+        $response->assertOk();
+        $response->assertViewHas('officers', function (array $officers): bool {
+            return ($officers['12']['status']['is_active'] ?? null) === false;
+        });
+
+        $this->activateOfficers(...OfficerType::cases());
+
+        $response = $this->get('/premium');
+
+        $response->assertOk();
+        $response->assertViewHas('officers', function (array $officers): bool {
+            return ($officers['12']['status']['is_active'] ?? null) === true;
+        });
     }
 
     public function testPremiumCatalogExposesSettingsBackedOfferContract(): void
