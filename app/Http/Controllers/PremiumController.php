@@ -80,8 +80,9 @@ class PremiumController extends OGameController
                 'image_class' => 'darkMatter',
                 'description' => __('t_ingame.premium.intro_text'),
                 'benefits' => [],
-                'meta' => [],
+                'meta' => [number_format($playerService->getDarkMatter(), 0, ',', '.') . ' ' . __('t_ingame.shop.dark_matter')],
                 'show_payment_overlay' => true,
+                'action_label' => __('t_ingame.shop.btn_purchase_dark_matter'),
             ],
             '12' => [
                 'ref' => '12',
@@ -121,7 +122,7 @@ class PremiumController extends OGameController
             $canAfford = $premiumOfficerService->canAfford($user, $officer);
             $meta = [
                 AppUtil::formatTimeDuration($offer['duration_seconds']),
-                number_format($offer['price'], 0, ',', '.') . ' ' . __('t_ingame.dark_matter'),
+                number_format($offer['price'], 0, ',', '.') . ' ' . __('t_ingame.shop.dark_matter'),
             ];
 
             if ($isActive && $expiresAt !== null) {
@@ -150,7 +151,7 @@ class PremiumController extends OGameController
                 'purchasable' => true,
                 'show_payment_overlay' => false,
                 'can_afford' => $canAfford,
-                'action_label' => $isActive ? __('t_ingame.loca_buy_extend') : $this->extractTooltipAction($tooltip),
+                'action_label' => $isActive ? __('t_ingame.shop.loca_buy_extend') : $this->extractTooltipAction($tooltip),
             ];
         }
 

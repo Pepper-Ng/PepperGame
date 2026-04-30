@@ -19,9 +19,8 @@
         close: function() {
             $overlay.remove();
             getAjaxResourcebox(function(resources) {
-                $("#planet #content .level span")
-                    .attr('class', 'undermark')
-                    .text(gfNumberGetHumanReadable(resources.darkmatter.amount, isMobile));
+                $("#planet #content .js_darkMatterAmount")
+                    .text(gfNumberGetHumanReadable(resources.darkmatter.amount, isMobile) + ' ' + {!! json_encode(__('t_ingame.shop.dark_matter')) !!});
             });
         }
     });
