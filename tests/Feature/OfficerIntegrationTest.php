@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
+use OGame\Factories\PlayerServiceFactory;
 use OGame\Models\Planet;
 use OGame\Services\OfficerService;
 use OGame\Services\PlanetListService;
 use OGame\Services\PlanetService;
 use OGame\Services\PlayerService;
-use OGame\Services\PlayerServiceFactory;
 use RuntimeException;
 use Tests\AccountTestCase;
 

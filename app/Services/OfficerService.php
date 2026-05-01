@@ -4,6 +4,7 @@ namespace OGame\Services;
 
 use Exception;
 use Illuminate\Support\Facades\DB;
+use OGame\Factories\PlayerServiceFactory;
 use OGame\Enums\DarkMatterTransactionType;
 use OGame\Models\Officer;
 use OGame\Models\User;
