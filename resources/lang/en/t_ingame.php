@@ -8,6 +8,7 @@ return [
     'overview' => [
         // Planet stats panel (typewriter animation)
         'diameter'             => 'Diameter',
+        'abandon_rename_modal' => 'Abandon/Rename :planet_name',
         'temperature'          => 'Temperature',
         'position'             => 'Position',
         'points'               => 'Points',
@@ -49,10 +50,11 @@ return [
     // -------------------------------------------------------------------------
 
     'shared' => [
-        'caution' => 'Caution',
-        'yes'     => 'yes',
-        'no'      => 'No',
-        'error'   => 'Error',
+        'caution'     => 'Caution',
+        'yes'         => 'yes',
+        'no'          => 'No',
+        'error'       => 'Error',
+        'dark_matter' => 'Dark Matter',
     ],
 
     // -------------------------------------------------------------------------
@@ -127,8 +129,11 @@ return [
     // -------------------------------------------------------------------------
 
     'shipyard_page' => [
-        'battleships' => 'Battleships',
-        'civil_ships' => 'Civil ships',
+        'battleships'            => 'Battleships',
+        'civil_ships'            => 'Civil ships',
+        'no_units_idle'          => 'No units in construction.',
+        'no_units_idle_tooltip'  => 'No units in construction.',
+        'to_shipyard'            => 'Go to Shipyard',
     ],
 
     // -------------------------------------------------------------------------
@@ -239,9 +244,16 @@ return [
         'select_all_ships'         => 'Select all ships',
         'reset_choice'             => 'Reset choice',
         'api_data'                 => 'This data can be entered into a compatible combat simulator:',
-        'tactical_retreat'         => 'Tactical retreat',
-        'tactical_retreat_tooltip' => 'Show Deuterium usage per tactical retreat',
-        'continue'                 => 'Continue',
+        'tactical_retreat'              => 'Tactical retreat',
+        'tactical_retreat_label'        => 'Tactical retreat:',
+        'tactical_retreat_tooltip'      => 'Show Deuterium usage per tactical retreat',
+        'tactical_retreat_full_tooltip' => 'Fleets can automatically retreat when attacked by vastly superior forces. Select never to disable automatic retreat.',
+        'tactical_retreat_admiral_tooltip' => 'Use the Admiral to enable your fleets to retreat from forces three times bigger than your own.',
+        'add_new_template'              => 'Add new template',
+        'bash_warning'                  => 'This attack may violate bashing limits in this universe.',
+        'admiral_slot_bonus'            => '+ 2 Fleet slots because of Admiral',
+        'general_slot_bonus'            => '+ 2 Fleet slots because of General',
+        'continue'                      => 'Continue',
         'back'                     => 'Back',
 
         // Step 2 – destination
@@ -1169,6 +1181,8 @@ return [
         'res_deuterium'             => 'Deuterium',
         'res_energy'                => 'Energy',
         'res_dark_matter'           => 'Dark Matter',
+        'no_ships_in_wreck'          => 'No ships in wreck field',
+        'no_wreck_available'         => 'No wreck field available',
 
         // Menu sidebar — item labels
         'menu_overview'             => 'Overview',
@@ -1278,6 +1292,99 @@ return [
         'loca_moon_giveup'          => 'Are you sure you want to abandon the moon %planetName% %planetCoordinates%?',
     ],
 
+    // ── Buildqueue ──────────────────────────────────────────────────────────
+    'buildqueue' => [
+        'building_duration'       => 'Building duration',
+        'total_time'              => 'Total time',
+        'complete_tooltip'        => 'Instantly completes the current shipyard production.',
+        'complete'                => 'Complete',
+        'halve_cost'              => 'Costs: :amount DM',
+        'halve_tooltip_building'  => 'Reduces construction time by 50% of the total construction time.',
+        'halve_time'              => 'Halve time',
+        'question_complete_unit'  => 'Do you want to immediately complete the construction order for :dm_cost?',
+        'question_halve_unit'     => 'Do you want to reduce the construction time of the current construction project by 50% of the total construction time (:time_reduction) for :dm_cost?',
+    ],
+
+    // ── Server settings overlay ─────────────────────────────────────────────
+    'serversettings_overlay' => [
+        'acs_enabled'         => 'ACS enabled',
+        'dm_bonus'            => 'Dark Matter bonus',
+        'debris_defense'      => 'Debris from defenses',
+        'debris_ships'        => 'Debris from ships',
+        'debris_deuterium'    => 'Debris contains deuterium',
+        'fleet_deut_reduction'=> 'Deuterium consumption reduction',
+        'fleet_speed_war'     => 'Fleet speed (war)',
+        'fleet_speed_holding' => 'Fleet speed (holding)',
+        'fleet_speed_peace'   => 'Fleet speed (peaceful)',
+        'ignore_empty'        => 'Ignore empty systems',
+        'ignore_inactive'     => 'Ignore inactive players',
+        'num_galaxies'        => 'Number of galaxies',
+        'planet_field_bonus'  => 'Planet field bonus',
+        'dev_speed'           => 'Economy speed',
+        'research_speed'      => 'Research speed',
+        'dm_regen_enabled'    => 'Dark Matter regeneration enabled',
+        'dm_regen_amount'     => 'Dark Matter regeneration amount',
+        'dm_regen_period'     => 'Dark Matter regeneration period',
+        'days'                => 'days',
+    ],
+
+    // ── Admin (developer shortcuts) ─────────────────────────────────────────
+    'admin' => [
+        'dev_title'                 => 'Developer shortcuts',
+        'dev_masquerade'            => 'Masquerade as player',
+        'dev_username'              => 'Username',
+        'dev_username_placeholder'  => 'Enter username',
+        'dev_masquerade_btn'        => 'Masquerade',
+        'dev_update_planet'         => 'Update current planet:',
+        'dev_set_mines'             => 'Set all mines to level 30',
+        'dev_set_storages'          => 'Set all storages to level 15',
+        'dev_set_shipyard'          => 'Set all shipyard facilities to level 12',
+        'dev_set_research'          => 'Set all research to level 10',
+        'dev_add_units'             => 'Add X of unit to current planet:',
+        'dev_units_amount'          => 'Amount of units to add:',
+        'dev_light_fighter'         => 'Light fighter',
+        'dev_set_building'          => 'Set building level on current planet:',
+        'dev_level_to_set'          => 'Level to set:',
+        'dev_set_research_level'    => 'Set research level for current player:',
+        'dev_class_settings'        => 'Character Class Settings',
+        'dev_disable_free_class'    => 'Disable Free Class Changes',
+        'dev_enable_free_class'     => 'Enable Free Class Changes',
+        'dev_reset_class'           => 'Reset Character Class',
+        'dev_goto_class'            => 'Go to Class Selection',
+        'dev_reset_planet'          => 'Reset planet',
+        'dev_reset_buildings'       => 'Set all buildings to level 0',
+        'dev_reset_research'        => 'Set all research to level 0',
+        'dev_reset_units'           => 'Remove all units',
+        'dev_reset_resources'       => 'Set all resources to 0',
+        'dev_add_resources'         => 'Add / subtract resources at coordinates:',
+        'dev_resources_desc'        => 'You can enter positive or negative values to add or subtract to the selected resource. Supports k/m/b suffixes (e.g., 1k, 2m, 3b)',
+        'dev_coordinates'           => 'Coordinates:',
+        'dev_galaxy'                => 'Galaxy:',
+        'dev_system'                => 'System:',
+        'dev_position'              => 'Position:',
+        'dev_resources_label'       => 'Resources to add/subtract:',
+        'dev_update_resources_planet' => 'Update Resources (planet)',
+        'dev_update_resources_moon' => 'Update Resources (moon)',
+        'dev_create_planet_moon'    => 'Create planet/moon at coordinates:',
+        'dev_moon_size'             => 'Moon Size (for Create Moon):',
+        'dev_debris_amount'         => 'Debris Amount:',
+        'dev_x_factor'              => 'X Factor (10-20):',
+        'dev_create_planet'         => 'Create Planet',
+        'dev_create_moon'           => 'Create Moon',
+        'dev_delete_planet'         => 'Delete Planet',
+        'dev_delete_moon'           => 'Delete Moon',
+        'dev_create_debris'         => 'Create/delete debris field at coordinates:',
+        'dev_debris_resources_label'=> 'Debris resources:',
+        'dev_create_debris_btn'     => 'Create debris',
+        'dev_delete_debris_btn'     => 'Delete debris',
+        'dev_quick_shortcut_desc'   => 'Quick shortcut for expedition-like debris field testing:',
+        'dev_create_expedition_debris' => 'Create expedition-like debris field (position 16)',
+        'dev_add_dm'                => 'Add / subtract dark matter at coordinates:',
+        'dev_dm_desc'               => 'You can enter positive or negative values to add or subtract dark matter. Supports k/m/b suffixes (e.g., 1k, 2m, 3b)',
+        'dev_dm_amount'             => 'Dark matter amount:',
+        'dev_update_dm'             => 'Update Dark Matter',
+    ],
+
     // ── Highscore ───────────────────────────────────────────────────────────
     'highscore' => [
         'player_highscore'      => 'Player highscore',
@@ -1349,6 +1456,7 @@ return [
         'buy_dark_matter'            => 'Purchase Dark Matter',
         'insufficient_dark_matter'   => 'You do not have enough Dark Matter.',
         'purchase_success'           => 'Officer purchased successfully.',
+        'commanding_staff_redundant' => 'Commanding Staff cannot be purchased when all five officers are already active individually.',
 
         // ── Officer titles, descriptions and tooltips ──────────────────────
         'officer_commander_title'       => 'Commander',

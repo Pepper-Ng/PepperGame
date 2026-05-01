@@ -151,6 +151,14 @@ class OfficerService
 
         $cost = $this->getCost($officerKey, $days);
 
+        if ($officerKey === 'all_officers') {
+            $officer = $this->getOfficer($user);
+
+            if ($officer->getDirectlyActiveOfficerCount() >= 5) {
+                throw new Exception(__('t_ingame.premium.commanding_staff_redundant'));
+            }
+        }
+
         DB::transaction(function () use ($user, $officerKey, $days, $cost): void {
             $lockedUser = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
 

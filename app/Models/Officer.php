@@ -109,7 +109,9 @@ class Officer extends Model
     }
 
     /**
-     * Get the number of individually active officers (excluding all_officers slot).
+     * Get the number of active officers.
+     *
+     * This counts officers as active when they are active directly or via all_officers.
      */
     public function getActiveOfficerCount(): int
     {
@@ -119,6 +121,24 @@ class Officer extends Model
                 $count++;
             }
         }
+        return $count;
+    }
+
+    /**
+     * Get the number of officers active via their own timer only (excluding all_officers fallback).
+     */
+    public function getDirectlyActiveOfficerCount(): int
+    {
+        $count = 0;
+
+        foreach (['commander', 'admiral', 'engineer', 'geologist', 'technocrat'] as $type) {
+            $column = $type . '_until';
+
+            if ($this->$column !== null && $this->$column->isFuture()) {
+                $count++;
+            }
+        }
+
         return $count;
     }
 }
