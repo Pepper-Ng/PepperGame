@@ -18726,7 +18726,7 @@ class SimpleCountdownTimer {
 }
 
 class CountdownTimer {
-  constructor(targetName, leftoverTime, reloadPage, countdownDoneFunction, primaryReloadViaWS, maxDigits = 2, countValue = -1) {
+  constructor(targetName, leftoverTime, reloadPage, countdownDoneFunction, primaryReloadViaWS, maxDigits = 2, countValue = -1, targetTechnologyId = null, totalDuration = null) {
     // default config
     this.countValue = parseInt(countValue);
     this.timestamp = 0;
@@ -18742,6 +18742,10 @@ class CountdownTimer {
     this.reloadPage = reloadPage;
     this.countdownDoneFunction = countdownDoneFunction;
     this.primaryReloadViaWS = primaryReloadViaWS;
+    const parsedTechnologyId = parseInt(targetTechnologyId);
+    const parsedTotalDuration = parseInt(totalDuration);
+    this.targetTechnologyId = isNaN(parsedTechnologyId) ? 0 : parsedTechnologyId;
+    this.totalDuration = isNaN(parsedTotalDuration) ? 0 : parsedTotalDuration;
     this.timer = timerHandler.appendCallback(this.updateCountdown.bind(this));
     this.updateCountdown();
   } // Getter
@@ -18757,13 +18761,24 @@ class CountdownTimer {
     return Math.round(this.startLeftoverTime + (currTime.getTime() - this.startTime) * this.countValue / 1000);
   }
 
+  updateTechnologyOverlay(timeLeftInSeconds) {
+    if (this.targetTechnologyId <= 0 || this.totalDuration <= 0) {
+      return;
+    }
+
+    const factor = Math.min(1, Math.max(0, timeLeftInSeconds) / this.totalDuration);
+    $(`li.technology[data-technology=${this.targetTechnologyId}][data-status="active"] .cooldownBackground`).css('height', factor * 100 + "%");
+  }
+
   updateCountdown() {
     let timeLeftInSeconds = this.getLeftoverTime();
 
     if (timeLeftInSeconds > 0) {
       $(`time.${this.targetName}`).text(this.getCurrentTimestring);
+      this.updateTechnologyOverlay(timeLeftInSeconds);
     } else {
       $(`time.${this.targetName}`).text(LocalizationStrings.status.ready);
+      this.updateTechnologyOverlay(0);
 
       if (typeof this.countdownDoneFunction == 'function') {
         this.countdownDoneFunction();

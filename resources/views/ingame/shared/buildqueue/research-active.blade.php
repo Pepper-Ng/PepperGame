@@ -78,7 +78,7 @@
         var priceresearch = {{ $halvingCost }};
         var referrerPage = $.deparam.querystring().page;
 
-        new CountdownTimer('researchCountdown', {{ $build_active->time_countdown }}, '{{ url()->current() }}', null, true, 3)
+        new CountdownTimer('researchCountdown', {{ $build_active->time_countdown }}, '{{ url()->current() }}', null, true, 3, -1, {{ $build_active->object->id }}, {{ $build_active->time_total }})
 
         function cancelbuilding(id, listId, question) {
             errorBoxDecision('Caution', "" + question + "", 'yes', 'No', function () {

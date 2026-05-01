@@ -34936,11 +34936,19 @@ ul.og-paginatable li.active {
 }
 
 #phalanxWrap .eventFleet .descFleet,
-#phalanxWrap .eventFleet .originFleet,
-#phalanxWrap .partnerInfo .descFleet,
-#phalanxWrap .partnerInfo .originFleet {
+#phalanxWrap .partnerInfo .descFleet {
     color:#7c8e9a;
     font-weight:700;
+    text-align:left;
+    width:215px;
+    white-space:nowrap;
+    overflow:hidden;
+}
+
+#phalanxWrap .eventFleet .originFleet,
+#phalanxWrap .partnerInfo .originFleet {
+    color:#fff;
+    font-weight:bold;
     text-align:left;
     width:215px;
     white-space:nowrap;
@@ -38067,7 +38075,7 @@ a.abortNow {
 }
 #costs .resourceIcon { margin: 0 11px 3px 11px; }
 
-.build-it_wrap {
+#technologydetails .build-it_wrap {
     float: right;
     bottom: 0px;
     position: absolute;
@@ -48153,7 +48161,7 @@ div.claimsmall p {
 Old IE stylesheets, probably not needed anymore. Keeping them here for reference.
 TODO: Remove these at a later time if they are not needed anymore.
 
-<!--[if lt IE 10]>
+\3c !--[if lt IE 10]>
 <link rel="stylesheet" type="text/css" href="/css/ltie10/a38a903f82bb4d2e7021f22bb14496.css" media="screen" />
 <link rel="stylesheet" type="text/css" href="/css/ltie10/79452e4c157dbce5929452f810159e.css" media="screen" />
 <link rel="stylesheet" type="text/css" href="/css/ltie10/9a111b0209f44edde46ca7dd9d303c.css" media="screen" />
@@ -48174,7 +48182,7 @@ TODO: Remove these at a later time if they are not needed anymore.
 <link rel="stylesheet" type="text/css" href="/css/ltie10/e7bb4d0526a879ed6cad775bfda300.css" media="screen" />
 <![endif]-->
 <link rel="stylesheet" type="text/css" href="/css/22b955f43c237ad23d644e8e52272a.css" media="screen" />
-<!--[if IE 8]>
+\3c !--[if IE 8]>
 <link rel="stylesheet" type="text/css" href="/css/ie8/0db2335aa04275bf3d33e76a35aafd.css" media="screen" />
 <![endif]-->
  */

@@ -34222,7 +34222,7 @@ a.abortNow {
 }
 #costs .resourceIcon { margin: 0 11px 3px 11px; }
 
-.build-it_wrap {
+#technologydetails .build-it_wrap {
     float: right;
     bottom: 0px;
     position: absolute;

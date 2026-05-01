@@ -8,10 +8,10 @@ label{font-weight:bold}fieldset{padding:1.4em;margin:0 0 1.5em 0;border:1px soli
 Old IE stylesheets, probably not needed anymore. Keeping them here for reference.
 TODO: Remove these at a later time if they are not needed anymore.
 
-<!--[if lt IE 8]>
+\3c !--[if lt IE 8]>
 <link rel="stylesheet" type="text/css" href="css/outgame/8203e97695e64d89c5ed0efca2dd55.css" />
 <![endif]-->
-<!--[if lt IE 7]>
+\3c !--[if lt IE 7]>
 <link rel="stylesheet" type="text/css" href="css/outgame/9253d1dbc4e5de58100a2db4b3b5b1.css" />
 <![endif]-->
  */
