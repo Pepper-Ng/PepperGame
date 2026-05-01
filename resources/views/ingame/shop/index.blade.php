@@ -135,6 +135,8 @@
         detailUrl = {!! json_encode(route('shop.detail')) !!};
 
         $(function () {
+            gfSlider = new GFSlider(getElementByIdWithCache('detail'));
+
             var defaultCategory = $('.categoryFilter a:first').attr('rel');
             var $shopBox = $('#js_shopSliderBox');
             var $inventoryBox = $('#js_inventorySliderBox');
