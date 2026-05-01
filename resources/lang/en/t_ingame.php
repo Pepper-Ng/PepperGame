@@ -1348,6 +1348,7 @@ return [
         'advantages'                 => 'Advantages:',
         'buy_dark_matter'            => 'Purchase Dark Matter',
         'insufficient_dark_matter'   => 'You do not have enough Dark Matter.',
+        'purchase_success'           => 'Officer purchased successfully.',
 
         // ── Officer titles, descriptions and tooltips ──────────────────────
         'officer_commander_title'       => 'Commander',
@@ -1373,6 +1374,23 @@ return [
         'officer_all_officers_title'       => 'Commanding Staff',
         'officer_all_officers_description' => 'If you hire all five officers, you will receive additional bonuses for your entire empire.',
         'officer_all_officers_tooltip'     => '<b>Max. fleet slots +1</b><p>You can dispatch more fleets at the same time.</p><br/><b>+2% energy production</b><p>Your power stations and solar satellites produce 2% more energy.</p><br/><b>+2% mine production</b><p>Your mines produce 2% more.</p><br/><b>+1 espionage levels</b><p>1 levels will be added to your espionage research.</p>',
+        'officer_commander_benefit_favourites' => '+40 favorites',
+        'officer_commander_benefit_queue'      => 'Building queue',
+        'officer_commander_benefit_scanner'    => 'Transport scanner',
+        'officer_commander_benefit_ads'        => 'Advertisement free',
+        'officer_admiral_benefit_fleet_slots'  => 'Max. fleet slots +2',
+        'officer_admiral_benefit_expeditions'  => 'Max. expeditions +1',
+        'officer_admiral_benefit_escape'       => 'Improved fleet escape rate',
+        'officer_admiral_benefit_save_slots'   => 'Max. save slots +20',
+        'officer_engineer_benefit_defence'     => 'Halves losses to defense systems',
+        'officer_engineer_benefit_energy'      => '+10% energy production',
+        'officer_geologist_benefit_mines'      => '+10% mine production',
+        'officer_technocrat_benefit_espionage' => '+2 espionage levels',
+        'officer_technocrat_benefit_research'  => '25% less research time',
+        'officer_all_officers_benefit_fleet_slots' => 'Max. fleet slots +1',
+        'officer_all_officers_benefit_energy'      => '+2% energy production',
+        'officer_all_officers_benefit_mines'       => '+2% mine production',
+        'officer_all_officers_benefit_espionage'   => '+1 espionage levels',
     ],
 
     // ── Shop ────────────────────────────────────────────────────────────────

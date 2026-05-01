@@ -3,9 +3,11 @@
 namespace OGame\Services;
 
 use Exception;
+use Illuminate\Support\Facades\DB;
 use OGame\Enums\DarkMatterTransactionType;
 use OGame\Models\Officer;
 use OGame\Models\User;
+use Throwable;
 
 /**
  * Class OfficerService.
@@ -88,7 +90,8 @@ class OfficerService
     private array $cache = [];
 
     public function __construct(
-        private DarkMatterService $darkMatterService
+        private DarkMatterService $darkMatterService,
+        private PlayerServiceFactory $playerServiceFactory,
     ) {
     }
 
@@ -147,21 +150,38 @@ class OfficerService
 
         $cost = $this->getCost($officerKey, $days);
 
-        // Debit dark matter (throws if insufficient)
-        $this->darkMatterService->debit(
-            $user,
-            $cost,
-            DarkMatterTransactionType::OFFICER_PURCHASE->value,
-            "Officer activation: {$officerKey} for {$days} days"
-        );
+        DB::transaction(function () use ($user, $officerKey, $days, $cost): void {
+            $lockedUser = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
 
-        // Activate/extend the officer
-        $officer = $this->getOfficer($user);
-        $officer->activate($officerKey, $days);
-        $officer->save();
+            // Keep the DM debit and officer activation in one transaction so a failed save cannot spend DM without granting the officer.
+            $this->darkMatterService->debit(
+                $lockedUser,
+                $cost,
+                DarkMatterTransactionType::OFFICER_PURCHASE->value,
+                "Officer activation: {$officerKey} for {$days} days"
+            );
+
+            $officer = Officer::query()
+                ->where('user_id', $lockedUser->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($officer === null) {
+                $officer = new Officer(['user_id' => $lockedUser->id]);
+            }
+
+            $officer->activate($officerKey, $days);
+            $officer->save();
+        });
 
         // Clear cache so subsequent reads reflect the update
         $this->clearCache($user);
+
+        try {
+            $this->refreshPlanetProductionCache($user->id);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 
     /**
@@ -221,5 +241,18 @@ class OfficerService
     public function getCommandingStaffEspionageLevels(User $user): int
     {
         return ($this->getOfficer($user)->getActiveOfficerCount() >= 5) ? 1 : 0;
+    }
+
+    private function refreshPlanetProductionCache(int $userId): void
+    {
+        $playerService = $this->playerServiceFactory->make($userId, true);
+
+        foreach ($playerService->planets->allPlanets() as $planet) {
+            try {
+                $planet->updateResourceProductionStats();
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
     }
 }
