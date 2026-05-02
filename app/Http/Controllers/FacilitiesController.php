@@ -77,12 +77,13 @@ class FacilitiesController extends AbstractBuildingsController
         // Get parent parameters
         $params = parent::indexPageParams($request, $player);
 
-        // Only expose wreck field data when the player has a Space Dock (level >= 1).
-        $spaceDockLevel = $this->planet->getObjectLevel('space_dock');
-        $wreckFieldData = $spaceDockLevel >= 1
-            ? $this->wreckFieldService->getWreckFieldForCurrentPlanet($this->planet)
-            : null;
-        $params['wreckField'] = $wreckFieldData;
+        // Add wreck field data only if Space Dock is built (level >= 1).
+        // Without a Space Dock, players should not see or interact with wreckage.
+        if ($this->planet->getObjectLevel('space_dock') >= 1) {
+            $params['wreckField'] = $this->wreckFieldService->getWreckFieldForCurrentPlanet($this->planet);
+        } else {
+            $params['wreckField'] = null;
+        }
 
         return $params;
     }
@@ -148,6 +149,53 @@ class FacilitiesController extends AbstractBuildingsController
     }
 
     /**
+     * Complete a building queue item instantly using Dark Matter.
+     *
+     * @param Request $request
+     * @param PlayerService $player
+     * @param HalvingService $halvingService
+     * @return JsonResponse
+     */
+    public function completeBuilding(Request $request, PlayerService $player, HalvingService $halvingService): JsonResponse
+    {
+        try {
+            $queueItemId = (int)$request->input('queue_item_id');
+
+            if ($queueItemId <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'error' => true,
+                    'message' => 'Invalid queue item ID',
+                    'newAjaxToken' => csrf_token(),
+                ]);
+            }
+
+            $result = $halvingService->completeBuilding(
+                $player->getUser(),
+                $queueItemId,
+                $player->planets->current()
+            );
+
+            session()->flash('success', __('You have successfully accelerated the order.'));
+
+            return response()->json([
+                'success' => true,
+                'error' => false,
+                'newAjaxToken' => csrf_token(),
+                'cost' => $result['cost'],
+                'new_balance' => $result['new_balance'],
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => true,
+                'message' => $e->getMessage(),
+                'newAjaxToken' => csrf_token(),
+            ]);
+        }
+    }
+
+    /**
      * Start repairs for the wreck field.
      *
      * @param Request $request
@@ -160,10 +208,7 @@ class FacilitiesController extends AbstractBuildingsController
             $planetService = $player->planets->current();
 
             $wreckFieldService = new WreckFieldService($player, app(SettingsService::class));
-            $spaceDockLevel = $planetService->getObjectLevel('space_dock');
-            $wreckField = $spaceDockLevel >= 1
-                ? $wreckFieldService->getWreckFieldForCurrentPlanet($planetService)
-                : null;
+            $wreckField = $wreckFieldService->getWreckFieldForCurrentPlanet($planetService);
 
             if (!$wreckField) {
                 return response()->json([
@@ -311,6 +356,16 @@ class FacilitiesController extends AbstractBuildingsController
     {
         try {
             $planetService = $player->planets->current();
+
+            // Hide wreck field from UI when Space Dock is not built yet.
+            if ($planetService->getObjectLevel('space_dock') < 1) {
+                return response()->json([
+                    'success' => true,
+                    'error' => false,
+                    'newAjaxToken' => csrf_token(),
+                    'wreckField' => null,
+                ]);
+            }
 
             $wreckFieldService = new WreckFieldService($player, app(SettingsService::class));
             $wreckField = $wreckFieldService->getWreckFieldForCurrentPlanet($planetService);

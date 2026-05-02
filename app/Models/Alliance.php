@@ -2,6 +2,7 @@
 
 namespace OGame\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -54,28 +55,25 @@ use Illuminate\Support\Carbon;
  * @method static Builder|Alliance whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+#[Fillable([
+    'alliance_tag',
+    'alliance_name',
+    'founder_user_id',
+    'internal_text',
+    'external_text',
+    'application_text',
+    'logo_url',
+    'homepage_url',
+    'is_open',
+    'founder_rank_name',
+    'newcomer_rank_name',
+    'alliance_class',
+    'alliance_class_changed_at',
+    'alliance_class_free_used',
+])]
 class Alliance extends Model
 {
     use HasFactory;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'alliance_tag',
-        'alliance_name',
-        'founder_user_id',
-        'internal_text',
-        'external_text',
-        'application_text',
-        'logo_url',
-        'homepage_url',
-        'is_open',
-        'founder_rank_name',
-        'newcomer_rank_name',
-    ];
 
     /**
      * The attributes that should be cast.
@@ -84,7 +82,21 @@ class Alliance extends Model
      */
     protected $casts = [
         'is_open' => 'boolean',
+        'alliance_class' => 'integer',
+        'alliance_class_changed_at' => 'datetime',
+        'alliance_class_free_used' => 'boolean',
     ];
+
+    /**
+     * Get the alliance class as enum (or null if no class is set).
+     */
+    public function allianceClass(): ?\OGame\Enums\AllianceClass
+    {
+        if ($this->alliance_class === null) {
+            return null;
+        }
+        return \OGame\Enums\AllianceClass::tryFrom((int) $this->alliance_class);
+    }
 
     /**
      * Get the founder user of this alliance.

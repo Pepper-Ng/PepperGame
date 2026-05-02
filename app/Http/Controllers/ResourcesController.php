@@ -53,9 +53,12 @@ class ResourcesController extends AbstractBuildingsController
             $this->header_filename_objects = [41, 42, 43];
         }
 
-        $this->objects = [
-            0 => ['metal_mine', 'crystal_mine', 'deuterium_synthesizer', 'solar_plant', 'fusion_plant', 'solar_satellite', 'crawler', 'metal_store', 'crystal_store', 'deuterium_store'],
-        ];
+        // Crawlers are a planet-only ship; they should not be listed on moons.
+        $resourceObjects = ['metal_mine', 'crystal_mine', 'deuterium_synthesizer', 'solar_plant', 'fusion_plant', 'solar_satellite', 'metal_store', 'crystal_store', 'deuterium_store'];
+        if ($this->planet->isPlanet()) {
+            array_splice($resourceObjects, 6, 0, ['crawler']);
+        }
+        $this->objects = [0 => $resourceObjects];
 
         // Parse shipyard queue because the resources page shows both the
         // building queue (handled by parent) but also the shipyard queue.
@@ -176,6 +179,23 @@ class ResourcesController extends AbstractBuildingsController
         $productionindex_total->crawler->energy->set($crawlerEnergy);
 
         $production_factor = $this->planet->getResourceProductionFactor();
+
+        // Inventory item bonus row (PlanetBoost amplifiers active on this planet).
+        // Sum percent_bonus per resource and apply to mine production for display.
+        $activeBoosts = \OGame\Models\PlanetBoost::query()
+            ->where('planet_id', $this->planet->getPlanetId())
+            ->where('expires_at', '>', now())
+            ->get();
+        $boostSum = ['metal' => 0, 'crystal' => 0, 'deuterium' => 0, 'energy' => 0];
+        foreach ($activeBoosts as $b) {
+            if (isset($boostSum[$b->resource])) {
+                $boostSum[$b->resource] += (int) $b->percent_bonus;
+            }
+        }
+        $productionindex_total->items->metal->set($productionindex_total->mine->metal->get() * $boostSum['metal'] / 100);
+        $productionindex_total->items->crystal->set($productionindex_total->mine->crystal->get() * $boostSum['crystal'] / 100);
+        $productionindex_total->items->deuterium->set($productionindex_total->mine->deuterium->get() * $boostSum['deuterium'] / 100);
+        $productionindex_total->items->energy->set($productionindex_total->mine->energy->get() * $boostSum['energy'] / 100);
 
         $productionindex_total->total->metal->set($this->planet->getMetalProductionPerHour());
         $productionindex_total->total->crystal->set($this->planet->getCrystalProductionPerHour());

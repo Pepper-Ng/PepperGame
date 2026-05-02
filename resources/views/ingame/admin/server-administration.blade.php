@@ -320,6 +320,111 @@
                         </div>
                     @endif
 
+                    <style>
+                        .stuck-missions-scroll::-webkit-scrollbar { width: 5px; }
+                        .stuck-missions-scroll::-webkit-scrollbar-thumb { background: #3d5b75; border-radius: 5px; }
+                        .stuck-missions-scroll::-webkit-scrollbar-thumb:hover { background: #567394; }
+                        .stuck-missions-scroll::-webkit-scrollbar-track { background: #090909; border-radius: 5px; }
+                    </style>
+
+                    {{-- ===== STUCK FLEET MISSIONS ===== --}}
+                    <p class="box_highlight textCenter no_buddies" style="margin-top: 20px;">@lang('Stuck Fleet Missions')</p>
+                    <form action="{{ route('admin.server-administration.stuck-missions.settings') }}" method="post">
+                        {{ csrf_field() }}
+                        <div class="group bborder" style="display: block;">
+                            <div class="fieldwrapper">
+                                <label class="styled textBeefy" for="stuck_min_overdue_hours" title="Only show missions that have been overdue for at least this many hours. Filters out healthy missions that are simply waiting for the player to log in.">Min. overdue (hours):</label>
+                                <div class="thefield">
+                                    <input type="text" id="stuck_min_overdue_hours" name="stuck_missions_min_overdue_hours" class="textInput w80 textCenter textBeefy" pattern="^[0-9]+$" value="{{ $stuckMissionsSettings['min_overdue_hours'] }}">
+                                </div>
+                            </div>
+                            <div class="fieldwrapper" style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+                                <input type="submit" class="btn_blue" value="Save Settings">
+                            </div>
+                        </div>
+                    </form>
+                    @if ($stuckMissions->isEmpty())
+                        <div class="group bborder" style="display: block;">
+                            <p style="text-align: center; padding: 10px;">No missions overdue by more than {{ $stuckMissionsSettings['min_overdue_hours'] }}h found.</p>
+                        </div>
+                    @else
+                        <div class="group bborder" style="display: block;">
+                            <div style="padding: 8px 10px; color: #aaa; font-size: 11px;">
+                                {{ $stuckMissions->count() }} mission(s) overdue by more than {{ $stuckMissionsSettings['min_overdue_hours'] }}h. Use normal processing for healthy rows, or recover broken fleets directly to the player's homeworld.
+                            </div>
+                            <div class="stuck-missions-scroll" style="max-height: 320px; overflow-y: auto;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed;">
+                                    <colgroup>
+                                        <col style="width: 16%">
+                                        <col style="width: 9%">
+                                        <col style="width: 9%">
+                                        <col style="width: 9%">
+                                        <col style="width: 14%">
+                                        <col style="width: 18%">
+                                        <col style="width: 25%">
+                                    </colgroup>
+                                    <thead>
+                                        <tr style="background: #0d0d1a; color: #aaa; font-size: 11px;">
+                                            <th style="padding: 4px 6px; text-align: left;">Mission</th>
+                                            <th style="padding: 4px 6px; text-align: left;">Player</th>
+                                            <th style="padding: 4px 6px; text-align: left;">From</th>
+                                            <th style="padding: 4px 6px; text-align: left;">To</th>
+                                            <th style="padding: 4px 6px; text-align: left;">Arrival (overdue)</th>
+                                            <th style="padding: 4px 6px; text-align: left;">Status</th>
+                                            <th style="padding: 4px 6px; text-align: left;">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($stuckMissions as $mission)
+                                            <tr style="border-top: 1px solid #222;">
+                                                <td style="padding: 4px 6px; vertical-align: middle; overflow: hidden;">
+                                                    <strong style="color: #aaa;">#{{ $mission['id'] }}</strong>
+                                                    <span style="font-size: 10px; background: #1a0a0a; padding: 1px 5px; border-radius: 3px; color: #aaa; margin-left: 2px;">{{ $mission['mission_label'] }}</span>
+                                                    @if ($mission['parent_id'])
+                                                        <div style="font-size: 10px; color: #666;">↩ #{{ $mission['parent_id'] }}</div>
+                                                    @endif
+                                                </td>
+                                                <td style="padding: 4px 6px; vertical-align: middle; overflow: hidden;">
+                                                    {{ $mission['user']?->username ?? 'Unknown' }}
+                                                </td>
+                                                <td style="padding: 4px 6px; vertical-align: middle; font-family: monospace; overflow: hidden;">
+                                                    {{ $mission['coordinates_from'] }}
+                                                </td>
+                                                <td style="padding: 4px 6px; vertical-align: middle; font-family: monospace; overflow: hidden;">
+                                                    {{ $mission['coordinates_to'] }}
+                                                </td>
+                                                <td style="padding: 4px 6px; vertical-align: middle; overflow: hidden;">
+                                                    {{ \Illuminate\Support\Carbon::createFromTimestamp($mission['time_arrival'])->format('Y-m-d H:i') }}
+                                                </td>
+                                                <td style="padding: 4px 6px; vertical-align: middle; overflow: hidden;">
+                                                    <span style="font-weight: bold; color: {{ $mission['status_color'] }};">{{ $mission['status_label'] }}</span>
+                                                </td>
+                                                <td style="padding: 4px 6px; vertical-align: middle;">
+                                                    <div style="display: flex; flex-direction: column; gap: 3px; align-items: flex-start;">
+                                                        @if ($mission['can_process'])
+                                                            <form action="{{ route('admin.server-administration.stuck-missions.process') }}" method="post" style="display: inline-block; margin: 0;">
+                                                                {{ csrf_field() }}
+                                                                <input type="hidden" name="mission_id" value="{{ $mission['id'] }}">
+                                                                <input type="submit" class="btn_blue" value="Process" style="font-size: 10px; padding: 2px 8px;">
+                                                            </form>
+                                                        @else
+                                                            <span style="color: #555; font-size: 10px;">Processing blocked</span>
+                                                            <form action="{{ route('admin.server-administration.stuck-missions.recover-homeworld') }}" method="post" style="display: inline-block; margin: 0;">
+                                                                {{ csrf_field() }}
+                                                                <input type="hidden" name="mission_id" value="{{ $mission['id'] }}">
+                                                                <input type="submit" class="btn_blue" value="Recover to Homeworld" style="font-size: 10px; padding: 2px 6px;">
+                                                            </form>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- ===== BOT DETECTION SETTINGS ===== --}}
                     <p class="box_highlight textCenter no_buddies" style="margin-top: 20px;">@lang('Bot Detection Settings')</p>
                     <form action="{{ route('admin.server-administration.detection-settings') }}" method="post">
@@ -514,6 +619,87 @@
                                                 @else
                                                     <span style="color: #666;">Expired</span>
                                                 @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+
+                    {{-- ===== BROADCAST MESSAGE (issue #1210) ===== --}}
+                    <p class="box_highlight textCenter no_buddies">@lang('Broadcast Message to All Players')</p>
+                    <div class="group bborder" style="display: block; margin-bottom: 30px;">
+                        @if (session('status') && str_contains(session('status'), 'Broadcast'))
+                            <div style="background: #0d2a0d; border: 1px solid #2a5a2a; border-radius: 3px; padding: 8px 12px; margin-bottom: 10px; color: #6cbe6c; font-size: 12px;">
+                                {{ session('status') }}
+                            </div>
+                        @endif
+                        <form action="{{ route('admin.server-administration.broadcast') }}" method="post" style="padding: 10px 0;">
+                            {{ csrf_field() }}
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 4px;">Subject</label>
+                                <input type="text" name="subject" maxlength="255" required
+                                    style="width: 100%; box-sizing: border-box; background: #0d1014; border: 1px solid #333; border-radius: 3px; color: #fff; padding: 6px 8px; font-size: 12px;"
+                                    placeholder="Message subject…"
+                                    value="{{ old('subject') }}">
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                <label style="display: block; font-size: 11px; color: #aaa; margin-bottom: 4px;">Body</label>
+                                <textarea name="body" maxlength="5000" required rows="5"
+                                    style="width: 100%; box-sizing: border-box; background: #0d1014; border: 1px solid #333; border-radius: 3px; color: #fff; padding: 6px 8px; font-size: 12px; resize: vertical;"
+                                    placeholder="Message body…">{{ old('body') }}</textarea>
+                            </div>
+                            <div style="text-align: right;">
+                                <input type="submit" class="btn_blue" value="Send to all players"
+                                    onclick="return confirm('Send this broadcast to ALL players? This cannot be undone.');">
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- ===== REPORTED CHAT MESSAGES (issue #1374) ===== --}}
+                    <p class="box_highlight textCenter no_buddies">@lang('Reported Chat Messages')</p>
+
+                    @if ($reportedMessages->isEmpty())
+                        <div class="group bborder" style="display: block;">
+                            <p style="text-align: center; padding: 10px;">
+                                No pending chat message reports.
+                            </p>
+                        </div>
+                    @else
+                        <div style="max-height: 400px; overflow-y: auto; border: 1px solid #333; border-radius: 3px; margin-bottom: 30px;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead style="background: #0d0d1a; position: sticky; top: 0;">
+                                    <tr>
+                                        <th style="padding: 4px 8px; text-align: left;">Sender</th>
+                                        <th style="padding: 4px 8px; text-align: left;">Message</th>
+                                        <th style="padding: 4px 8px; text-align: left;">Reporters</th>
+                                        <th style="padding: 4px 8px; text-align: left;">Last reported</th>
+                                        <th style="padding: 4px 8px; text-align: center;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($reportedMessages as $reported)
+                                        <tr style="border-top: 1px solid #222;">
+                                            <td style="padding: 6px 8px; font-size: 11px; vertical-align: top; white-space: nowrap;">
+                                                {{ $reported['sender']?->username ?? '(deleted)' }}
+                                            </td>
+                                            <td style="padding: 6px 8px; font-size: 11px; vertical-align: top; max-width: 380px; word-wrap: break-word;">
+                                                {{ $reported['message']->message }}
+                                            </td>
+                                            <td style="padding: 6px 8px; font-size: 11px; vertical-align: top; color: #aaa;">
+                                                <strong style="color: #e6b800;">{{ $reported['report_count'] }}</strong>
+                                                <span style="font-size: 10px;">({{ $reported['reporters']->implode(', ') }})</span>
+                                            </td>
+                                            <td style="padding: 6px 8px; font-size: 11px; vertical-align: top; color: #aaa; white-space: nowrap;">
+                                                {{ $reported['last_reported']?->format('Y-m-d H:i') }}
+                                            </td>
+                                            <td style="padding: 6px 8px; font-size: 11px; vertical-align: top; text-align: center;">
+                                                <form action="{{ route('admin.server-administration.chat-report.dismiss') }}" method="post" style="display:inline;">
+                                                    {{ csrf_field() }}
+                                                    <input type="hidden" name="chat_message_id" value="{{ $reported['chat_message_id'] }}">
+                                                    <input type="submit" class="btn_blue" value="Dismiss" style="font-size: 10px; padding: 2px 8px;">
+                                                </form>
                                             </td>
                                         </tr>
                                     @endforeach

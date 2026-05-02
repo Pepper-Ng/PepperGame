@@ -9,6 +9,7 @@ use Illuminate\View\View;
 use Log;
 use OGame\Facades\AppUtil;
 use OGame\Factories\PlanetServiceFactory;
+use OGame\GameConstants\UniverseConstants;
 use OGame\Models\Alliance;
 use OGame\Models\Enums\PlanetType;
 use OGame\Models\FleetMission;
@@ -209,6 +210,14 @@ class GalaxyController extends OGameController
     {
         $debrisResources = $debrisField->getResources();
 
+        // Expedition debris at position 16 is harvested by Pathfinders, which
+        // have half the cargo capacity of Recyclers. Using recycler capacity
+        // here would under-estimate the required ship count and leave half the
+        // field uncollected (#1350).
+        $harvesterShip = $debrisField->getCoordinates()->position === UniverseConstants::EXPEDITION_POSITION
+            ? 'pathfinder'
+            : 'recycler';
+
         return [
             'planetId' => 0,
             'planetName' => 'debris_field',
@@ -219,7 +228,7 @@ class GalaxyController extends OGameController
                     'name' => __('t_ingame.fleet.mission_recycle'),
                 ],
             ],
-            'requiredShips' => $debrisField->calculateRequiredRecyclers(),
+            'requiredShips' => $debrisField->calculateRequiredShips($harvesterShip),
             'planetType' => 2,
             'resources' => [
                 'metal' => [
@@ -295,11 +304,12 @@ class GalaxyController extends OGameController
         ];
 
         if ($planet->getPlayer()->getId() !== $this->playerService->getId()) {
-            // Skip aggressive missions (Espionage, Attack) against Legor
-            $isLegor = $planet->getPlayer()->getUsername(false) === 'Legor';
+            // Aggressive missions (Espionage, Attack, Moon destruction) are never offered
+            // against administrator-owned planets/moons.
+            $isAdmin = $planet->getPlayer()->getUser()->hasRole('admin');
 
-            if (!$isLegor) {
-                // Espionage (only if foreign planet and not Legor).
+            if (!$isAdmin) {
+                // Espionage (only if foreign planet and not admin).
                 $availableMissions[] = [
                     'missionType' => 6,
                     'canSpy' => true,
@@ -309,7 +319,7 @@ class GalaxyController extends OGameController
                     'name' => __('t_ingame.fleet.mission_espionage'),
                 ];
 
-                // Attack (only if foreign planet and not Legor).
+                // Attack (only if foreign planet and not admin).
                 $availableMissions[] = [
                     'missionType' => 1,
                     'link' => route('fleet.index', ['galaxy' => $galaxy, 'system' => $system, 'position' => $position, 'type' => $planet->getPlanetType()->value, 'mission' => 1]),
@@ -332,8 +342,8 @@ class GalaxyController extends OGameController
                 ];
             }
 
-            // Moon destruction (only if planet is a moon).
-            if ($planet->isMoon()) {
+            // Moon destruction (only if planet is a moon and target is not admin).
+            if ($planet->isMoon() && !$isAdmin) {
                 $availableMissions[] = [
                     'missionType' => 10,
                     'link' => route('fleet.index', ['galaxy' => $galaxy, 'system' => $system, 'position' => $position, 'type' => $planet->getPlanetType()->value, 'mission' => 10]),
@@ -413,24 +423,29 @@ class GalaxyController extends OGameController
 
         // Check if missile attack is possible:
         // - Must be foreign planet (not own)
-        // - Target must be within range (missiles = 0 is allowed: overlay shows disabled button)
+        // - Must have missiles available
+        // - Target must be within range
         $canMissileAttack = false;
         $missileAttackLink = route('galaxy.index');
 
         if ($planet->getPlayer()->getId() !== $this->playerService->getId()) {
             $currentPlanet = $this->playerService->planets->current();
-            $missileRange = $this->playerService->getMissileRange();
-            $targetCoordinate = new Coordinate($galaxy, $system, $position);
-            $distance = $this->calculateSystemDistance($currentPlanet->getPlanetCoordinates(), $targetCoordinate);
+            $availableMissiles = $currentPlanet->getObjectAmount('interplanetary_missile');
 
-            if ($distance <= $missileRange) {
-                $canMissileAttack = true;
-                $missileAttackLink = route('galaxy.missile-attack.overlay', [
-                    'galaxy' => $galaxy,
-                    'system' => $system,
-                    'position' => $position,
-                    'type' => $planet->getPlanetType()->value,
-                ]);
+            if ($availableMissiles > 0) {
+                $missileRange = $this->playerService->getMissileRange();
+                $targetCoordinate = new Coordinate($galaxy, $system, $position);
+                $distance = $this->calculateSystemDistance($currentPlanet->getPlanetCoordinates(), $targetCoordinate);
+
+                if ($distance <= $missileRange) {
+                    $canMissileAttack = true;
+                    $missileAttackLink = route('galaxy.missile-attack.overlay', [
+                        'galaxy' => $galaxy,
+                        'system' => $system,
+                        'position' => $position,
+                        'type' => $planet->getPlanetType()->value,
+                    ]);
+                }
             }
         }
 
@@ -861,6 +876,12 @@ class GalaxyController extends OGameController
         $data['available_missiles'] = $currentPlanet->getObjectAmount('interplanetary_missile');
         $data['missile_range'] = $player->getMissileRange();
 
+        // Validate basic requirements
+        if ($data['available_missiles'] <= 0) {
+            $data['error'] = __('No missiles available');
+            return view('ingame.galaxy.missileattack', $data);
+        }
+
         // Load target planet
         $targetCoordinate = new Coordinate($galaxy, $system, $position);
         $targetPlanetType = PlanetType::from($type);
@@ -932,7 +953,7 @@ class GalaxyController extends OGameController
             'system' => 'required|integer|min:1',
             'position' => 'required|integer|min:1|max:15',
             'type' => 'required|integer',
-            'missile_count' => 'required|integer|min:0',
+            'missile_count' => 'required|integer|min:1',
             'target_priority' => 'required|integer|min:0|max:7',
         ]);
 
@@ -948,17 +969,10 @@ class GalaxyController extends OGameController
 
         // Check if player has enough missiles
         $availableMissiles = $currentPlanet->getObjectAmount('interplanetary_missile');
-        if ($missileCount === 0 || $availableMissiles === 0) {
-            return response()->json([
-                'success' => false,
-                'error' => __('t_ingame.galaxy.insufficient_range'),
-                'close_overlay' => true,
-            ], 400);
-        }
         if ($missileCount > $availableMissiles) {
             return response()->json([
                 'success' => false,
-                'error' => __('t_ingame.galaxy.not_enough_missiles'),
+                'error' => __('Not enough missiles available'),
             ], 400);
         }
 

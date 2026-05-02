@@ -475,34 +475,43 @@ class PlayerService
     /**
      * Get planet ID that player has currently selected / is looking at.
      *
+     * Planet selection is stored per-session so that multiple devices/browsers
+     * are fully isolated from each other. On a fresh session (e.g. after login)
+     * the player always starts on their home planet (first planet).
+     *
      * @return int
      */
     public function getCurrentPlanetId(): int
     {
-        if (!$this->user->planet_current) {
-            // If no current planet is set, return the first planet of the player.
-            return $this->planets->first()->getPlanetId();
+        $sessionPlanetId = session('current_planet_id');
+
+        if ($sessionPlanetId && $this->planets->planetExistsAndOwnedByPlayer((int)$sessionPlanetId)) {
+            return (int)$sessionPlanetId;
         }
 
-        return $this->user->planet_current;
+        // No valid session value: default to the home planet (first planet).
+        return $this->planets->first()->getPlanetId();
     }
 
     /**
-     * Set current planet ID (update).
+     * Set current planet ID (session-based, per-session isolation).
+     *
+     * Stores the selection in the Laravel session only — not in the database —
+     * so each browser/device maintains its own independent planet selection.
      *
      * @param int $planet_id
      */
     public function setCurrentPlanetId(int $planet_id): void
     {
-        // Check if user owns this planet ID.
-        // Planet ID 0 is always valid as that will be updated to the first planet of the player.
+        // Planet ID 0 resets the selection to the home planet.
         if ($planet_id == 0) {
-            $this->user->planet_current = null;
-            $this->user->save();
+            session()->forget('current_planet_id');
             return;
-        } elseif ($this->planets->planetExistsAndOwnedByPlayer($planet_id)) {
-            $this->user->planet_current = $planet_id;
-            $this->user->save();
+        }
+
+        // Only accept planet IDs that are owned by this player.
+        if ($this->planets->planetExistsAndOwnedByPlayer($planet_id)) {
+            session(['current_planet_id' => $planet_id]);
         }
     }
 
@@ -555,7 +564,15 @@ class PlayerService
         $officer_fleet_bonus = $officerService->getAdmiralFleetSlots($user)
             + $officerService->getCommandingStaffFleetSlots($user);
 
-        return $fleet_slots_from_research + $fleet_slots_bonus + $officer_fleet_bonus;
+        // Add inventory item bonus (Slot Flotte) — sum of active PlanetBoost rows
+        // with resource='fleet_slots' across all user's planets.
+        $inventory_fleet_bonus = (int) \OGame\Models\PlanetBoost::query()
+            ->where('user_id', $this->getId())
+            ->where('resource', 'fleet_slots')
+            ->where('expires_at', '>', now())
+            ->sum('percent_bonus');
+
+        return $fleet_slots_from_research + $fleet_slots_bonus + $officer_fleet_bonus + $inventory_fleet_bonus;
     }
 
     /**
@@ -604,7 +621,15 @@ class PlayerService
         $officerService = app(OfficerService::class);
         $officer_expedition_bonus = $officerService->getAdditionalExpeditionSlots($user);
 
-        return $expedition_slots_from_research + $bonus_slots + $expedition_slots_bonus + $officer_expedition_bonus;
+        // Add inventory item bonus (Slot Spedizioni) — sum of active PlanetBoost rows
+        // with resource='expedition_slots' across all user's planets.
+        $inventory_expedition_bonus = (int) \OGame\Models\PlanetBoost::query()
+            ->where('user_id', $user->id)
+            ->where('resource', 'expedition_slots')
+            ->where('expires_at', '>', now())
+            ->sum('percent_bonus');
+
+        return $expedition_slots_from_research + $bonus_slots + $expedition_slots_bonus + $officer_expedition_bonus + $inventory_expedition_bonus;
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace OGame\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -10,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\Mail;
+use OGame\Mail\ResetPasswordMail;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
@@ -40,6 +44,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int|null $planet_current
  * @property int $dark_matter
  * @property Carbon|null $dark_matter_last_regen
+ * @property int $honor_points
  * @property bool $vacation_mode
  * @property Carbon|null $vacation_mode_activated_at
  * @property Carbon|null $vacation_mode_until
@@ -80,6 +85,12 @@ use Spatie\Permission\Traits\HasRoles;
  * @method static Builder|User whereUsernameUpdatedAt($value)
  * @mixin \Eloquent
  */
+#[Fillable([
+    'username', 'email', 'password', 'lang', 'espionage_probes_amount',
+])]
+#[Hidden([
+    'password',
+])]
 class User extends Authenticatable
 {
     use HasFactory;
@@ -118,24 +129,6 @@ class User extends Authenticatable
             }
         });
     }
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'username', 'email', 'password', 'lang', 'espionage_probes_amount',
-    ];
-
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-    ];
 
     /**
      * The attributes that should be cast.
@@ -329,5 +322,18 @@ class User extends Authenticatable
     public function canBeImpersonated(): bool
     {
         return true;
+    }
+
+    /**
+     * Send the password reset notification using OGameX branded email.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->email,
+        ], false));
+
+        Mail::to($this->email)->send(new ResetPasswordMail($resetUrl, $this->username));
     }
 }

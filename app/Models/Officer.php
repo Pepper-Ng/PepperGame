@@ -87,7 +87,7 @@ class Officer extends Model
             return $directActive;
         }
 
-        // Un ufficiale è attivo se attivato singolarmente O se all_officers è attivo
+        // An officer is active if individually activated OR if all_officers is active.
         return $directActive || $this->isAllOfficersActive();
     }
 
@@ -100,10 +100,10 @@ class Officer extends Model
         $current = $this->$column;
 
         if ($current !== null && $current->isFuture()) {
-            // Estende dalla scadenza attuale (copy() evita mutazione in-place)
+            // Extend from the current expiration (copy() avoids in-place mutation).
             $this->$column = $current->copy()->addDays($days);
         } else {
-            // Nuova attivazione da adesso
+            // New activation starting now.
             $this->$column = now()->addDays($days);
         }
     }
