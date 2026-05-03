@@ -58,7 +58,7 @@ create_env_file_from_environment() {
     write_env_var "DB_USERNAME" "${DB_USERNAME:-root}"
     write_env_var "DB_PASSWORD" "${DB_PASSWORD:-toor}"
     write_env_var "BROADCAST_CONNECTION" "${BROADCAST_CONNECTION:-log}"
-    write_env_var "CACHE_STORE" "${CACHE_STORE:-file}"
+    write_env_var "CACHE_STORE" "${CACHE_STORE:-database}"
     write_env_var "SESSION_DRIVER" "${SESSION_DRIVER:-database}"
     write_env_var "SESSION_LIFETIME" "${SESSION_LIFETIME:-720}"
     write_env_var "QUEUE_CONNECTION" "${QUEUE_CONNECTION:-database}"
@@ -105,10 +105,10 @@ ensure_runtime_directories() {
         /var/www/bootstrap/cache
 }
 
-if [ ! -f /var/www/.env ]; then
-    if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
-        create_env_file_from_environment
-    elif [ "${APP_ENV:-}" = "production" ] && [ -f /var/www/.env.example-prod ]; then
+if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
+    create_env_file_from_environment
+elif [ ! -f /var/www/.env ]; then
+    if [ "${APP_ENV:-}" = "production" ] && [ -f /var/www/.env.example-prod ]; then
         cp /var/www/.env.example-prod /var/www/.env
         echo ".env file not found, copied .env.example-prod to .env"
     elif [ -f /var/www/.env.example ]; then
