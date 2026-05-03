@@ -180,6 +180,9 @@ elif [ "$role" = "app" ]; then
         su -s /bin/sh -c "php artisan cache:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache" www-data
     fi
 
+    ensure_runtime_directories
+    chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+
     exec php-fpm
 else
     echo "Could not match the container role \"$role\""
