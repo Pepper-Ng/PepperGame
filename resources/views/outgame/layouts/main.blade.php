@@ -114,7 +114,6 @@
                             "alertTextOk": {!! json_encode(__('t_external.validation.username_available')) !!},
                             "alertTextLoad": {!! json_encode(__('t_external.validation.username_available')) !!}
                         },
-                        "alertText": {!! json_encode(__('t_external.validation.username_taken')) !!},
                         "onlyLetter": {
                             "regex": /^[a-zA-Z ']+$/,
                             "alertText": {!! json_encode(__('t_external.validation.only_letters')) !!}
