@@ -41,84 +41,87 @@
     <script type="text/javascript">
         // <![CDATA[
         (function ($) {
+            var validationRules = {
+                "required": {
+                    "alertText": {!! json_encode(__('t_external.validation.required')) !!},
+                    "alertTextCheckboxMultiple": {!! json_encode(__('t_external.validation.make_decision')) !!},
+                    "alertTextCheckboxe": {!! json_encode(__('t_external.validation.accept_terms')) !!}
+                },
+                "length": {
+                    "regex": /^.{3,20}$/,
+                    "alertText": {!! json_encode(__('t_external.validation.length')) !!}
+                },
+                "pwLength": {
+                    "regex": /^.{4,20}$/,
+                    "alertText": {!! json_encode(__('t_external.validation.pw_length')) !!}
+                },
+                "email": {
+                    "regex": /^[a-zA-Z0-9_.\-]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z0-9]{2,4}$/,
+                    "alertText": {!! json_encode(__('t_external.validation.email')) !!}
+                },
+                "noSpecialCharacters": {
+                    "regex": /^[a-zA-Z0-9\s_\-]+$/,
+                    "alertText": {!! json_encode(__('t_external.validation.invalid_chars')) !!}
+                },
+                "noBeginOrEndUnderscore": {
+                    "regex": /^([^_]+(.*[^_])?)?$/,
+                    "alertText": {!! json_encode(__('t_external.validation.no_begin_end_underscore')) !!}
+                },
+                "noBeginOrEndHyphen": {
+                    "regex": /^([^\-]+(.*[^\-])?)?$/,
+                    "alertText": ""
+                },
+                "noBeginOrEndWhitespace": {
+                    "regex": /^([^\s]+(.*[^\s])?)?$/,
+                    "alertText": {!! json_encode(__('t_external.validation.no_begin_end_whitespace')) !!}
+                },
+                "notMoreThanThreeUnderscores": {
+                    "regex": /^[^_]*(_[^_]*){0,3}$/,
+                    "alertText": {!! json_encode(__('t_external.validation.max_three_underscores')) !!}
+                },
+                "notMoreThanThreeHyphen": {
+                    "regex": /^[^\-]*(\-[^\-]*){0,3}$/,
+                    "alertText": ""
+                },
+                "notMoreThanThreeWhitespaces": {
+                    "regex": /^[^\s]*(\s[^\s]*){0,3}$/,
+                    "alertText": {!! json_encode(__('t_external.validation.max_three_whitespaces')) !!}
+                },
+                "noCollocateUnderscores": {
+                    "regex": /^[^_]*(_[^_]+)*_?$/,
+                    "alertText": {!! json_encode(__('t_external.validation.no_consecutive_underscores')) !!}
+                },
+                "noCollocateHyphen": {
+                    "regex": /^[^\-]*(\-[^\-]+)*-?$/,
+                    "alertText": ""
+                },
+                "noCollocateWhitespaces": {
+                    "regex": /^[^\s]*(\s[^\s]+)*\s?$/,
+                    "alertText": {!! json_encode(__('t_external.validation.no_consecutive_whitespaces')) !!}
+                },
+                "ajaxUser": {
+                    "file": "../validateUser.php",
+                    "alertTextOk": {!! json_encode(__('t_external.validation.username_available')) !!},
+                    "alertTextLoad": {!! json_encode(__('t_external.validation.username_loading')) !!},
+                    "alertText": {!! json_encode(__('t_external.validation.username_taken')) !!}
+                },
+                "ajaxName": {
+                    "file": "../validateUser.php",
+                    "alertTextOk": {!! json_encode(__('t_external.validation.username_available')) !!},
+                    "alertTextLoad": {!! json_encode(__('t_external.validation.username_available')) !!}
+                },
+                "onlyLetter": {
+                    "regex": /^[a-zA-Z ']+$/,
+                    "alertText": {!! json_encode(__('t_external.validation.only_letters')) !!}
+                }
+            };
+
             $.fn.validationEngineLanguage = function () {
             };
             $.validationEngineLanguage = {
+                allRules: validationRules,
                 newLang: function () {
-                    $.validationEngineLanguage.allRules = {
-                        "required": {
-                            "alertText": {!! json_encode(__('t_external.validation.required')) !!},
-                            "alertTextCheckboxMultiple": {!! json_encode(__('t_external.validation.make_decision')) !!},
-                            "alertTextCheckboxe": {!! json_encode(__('t_external.validation.accept_terms')) !!}
-                        },
-                        "length": {
-                            "regex": /^.{3,20}$/,
-                            "alertText": {!! json_encode(__('t_external.validation.length')) !!}
-                        },
-                        "pwLength": {
-                            "regex": /^.{4,20}$/,
-                            "alertText": {!! json_encode(__('t_external.validation.pw_length')) !!}
-                        },
-                        "email": {
-                            "regex": /^[a-zA-Z0-9_.\-]+@([a-zA-Z0-9\-]+\.)+[a-zA-Z0-9]{2,4}$/,
-                            "alertText": {!! json_encode(__('t_external.validation.email')) !!}
-                        },
-                        "noSpecialCharacters": {
-                            "regex": /^[a-zA-Z0-9\s_\-]+$/,
-                            "alertText": {!! json_encode(__('t_external.validation.invalid_chars')) !!}
-                        },
-                        "noBeginOrEndUnderscore": {
-                            "regex": /^([^_]+(.*[^_])?)?$/,
-                            "alertText": {!! json_encode(__('t_external.validation.no_begin_end_underscore')) !!}
-                        },
-                        "noBeginOrEndHyphen": {
-                            "regex": /^([^\-]+(.*[^\-])?)?$/,
-                            "alertText": ""
-                        },
-                        "noBeginOrEndWhitespace": {
-                            "regex": /^([^\s]+(.*[^\s])?)?$/,
-                            "alertText": {!! json_encode(__('t_external.validation.no_begin_end_whitespace')) !!}
-                        },
-                        "notMoreThanThreeUnderscores": {
-                            "regex": /^[^_]*(_[^_]*){0,3}$/,
-                            "alertText": {!! json_encode(__('t_external.validation.max_three_underscores')) !!}
-                        },
-                        "notMoreThanThreeHyphen": {
-                            "regex": /^[^\-]*(\-[^\-]*){0,3}$/,
-                            "alertText": ""
-                        },
-                        "notMoreThanThreeWhitespaces": {
-                            "regex": /^[^\s]*(\s[^\s]*){0,3}$/,
-                            "alertText": {!! json_encode(__('t_external.validation.max_three_whitespaces')) !!}
-                        },
-                        "noCollocateUnderscores": {
-                            "regex": /^[^_]*(_[^_]+)*_?$/,
-                            "alertText": {!! json_encode(__('t_external.validation.no_consecutive_underscores')) !!}
-                        },
-                        "noCollocateHyphen": {
-                            "regex": /^[^\-]*(\-[^\-]+)*-?$/,
-                            "alertText": ""
-                        },
-                        "noCollocateWhitespaces": {
-                            "regex": /^[^\s]*(\s[^\s]+)*\s?$/,
-                            "alertText": {!! json_encode(__('t_external.validation.no_consecutive_whitespaces')) !!}
-                        },
-                        "ajaxUser": {
-                            "file": "../validateUser.php",
-                            "alertTextOk": {!! json_encode(__('t_external.validation.username_available')) !!},
-                            "alertTextLoad": {!! json_encode(__('t_external.validation.username_loading')) !!},
-                            "alertText": {!! json_encode(__('t_external.validation.username_taken')) !!}
-                        },
-                        "ajaxName": {
-                            "file": "../validateUser.php",
-                            "alertTextOk": {!! json_encode(__('t_external.validation.username_available')) !!},
-                            "alertTextLoad": {!! json_encode(__('t_external.validation.username_available')) !!}
-                        },
-                        "onlyLetter": {
-                            "regex": /^[a-zA-Z ']+$/,
-                            "alertText": {!! json_encode(__('t_external.validation.only_letters')) !!}
-                        }
-                    }
+                    $.validationEngineLanguage.allRules = validationRules;
                 }
             }
         })(jQuery);
@@ -220,7 +223,6 @@
                   class=""
                   name="subscribeForm"
                   method="POST"
-                  onsubmit="changeAction('register','subscribeForm');"
                   action="{{ route('register') }}"
                   autocomplete="off"
             >
