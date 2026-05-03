@@ -528,7 +528,7 @@
         <div id="ipimenucomponent" class="">
             <div id="ipiMenuWrapper" class="ipiMenuTrackedAction ipiHintable " title="" data-ipi-hint="ipiMenu">
                 <div id="ipimenucontent"><a
-                            href="#TODO_page=ajax&amp;component=ipioverview&amp;action=overviewLayer&amp;ajax=1"
+                            href="{{ route('ipi.overview.layer') }}"
                             class="overlay textBeefy" data-overlay-title="" id="ipiInnerMenuContentHolder">
                         <div class="ipiMenuHead">
                             {{ __('t_ingame.layout.menu_directives') }}
@@ -1896,6 +1896,15 @@ However, the Space Dock's engineers think that some of the remains can be salvag
 <script type="text/javascript">
     //mmoInitSelect();
     //mmoTicker();    mmoToggleDisplay.init("mmoGamesOverviewPanel");
+
+    $(document).ready(function () {
+        if (typeof IPI !== 'undefined') {
+            IPI.initializeMenuContent({
+                ipiMenuContentUrl: "{{ route('ipi.menu-content') }}",
+                highlights: []
+            });
+        }
+    });
 
     @if (\Session::has('success'))
     $(document).ready(function () {

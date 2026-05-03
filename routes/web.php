@@ -19,6 +19,7 @@ use OGame\Http\Controllers\FleetEventsController;
 use OGame\Http\Controllers\ForgotEmailController;
 use OGame\Http\Controllers\GalaxyController;
 use OGame\Http\Controllers\HighscoreController;
+use OGame\Http\Controllers\IpiController;
 use OGame\Http\Controllers\JumpGateController;
 use OGame\Http\Controllers\LanguageController;
 use OGame\Http\Controllers\MerchantController;
@@ -251,6 +252,14 @@ Route::middleware(['auth', 'banned', 'globalgame', 'locale', 'firstlogin'])->gro
     Route::get('/buddies/online', [BuddiesController::class, 'getOnlineBuddies'])->name('buddies.online');
 
     Route::get('/rewards', [RewardsController::class, 'index'])->name('rewards.index');
+
+    // Directives (IPI)
+    Route::get('/ajax/ipi/menu-content', [IpiController::class, 'menuContent'])->name('ipi.menu-content');
+    Route::get('/ajax/ipi/overview', [IpiController::class, 'overviewLayer'])->name('ipi.overview.layer');
+    Route::get('/ajax/ipi/track-task', [IpiController::class, 'trackTask'])->name('ipi.track-task');
+    Route::get('/ajax/ipi/collect-task', [IpiController::class, 'collectTask'])->name('ipi.collect-task');
+    Route::get('/ajax/ipi/collect-chapter', [IpiController::class, 'collectChapter'])->name('ipi.collect-chapter');
+
     Route::get('/planet-move', [PlanetMoveController::class, 'index'])->name('planetMove.index');
     Route::post('/ajax/planet-move', [PlanetMoveController::class, 'move'])->name('planetMove.move');
     Route::get('/ajax/planet-move/cancel', [PlanetMoveController::class, 'cancel'])->name('planetMove.cancel');
