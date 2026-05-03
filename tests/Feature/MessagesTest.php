@@ -293,6 +293,28 @@ class MessagesTest extends MoonTestCase
     }
 
     /**
+     * Ensure auction winner messages are visible under the Economy tab.
+     */
+    public function testAuctioneerWonMessageIsMappedToEconomyTab(): void
+    {
+        $economyKeys = GameMessageFactory::GetGameMessageKeysByTab('economy', 'economy');
+        $this->assertContains('auctioneer_won', $economyKeys);
+
+        $messageModel = new Message();
+        $messageModel->key = 'auctioneer_won';
+        $messageModel->params = [
+            'lot_title' => 'Platinum KRAKEN',
+            'planet' => '[planet]' . $this->planetService->getPlanetId() . '[/planet]',
+            'bid_points' => '12345',
+        ];
+
+        $gameMessage = GameMessageFactory::createGameMessage($messageModel);
+        $this->assertSame('economy', $gameMessage->getTab());
+        $this->assertSame('economy', $gameMessage->getSubtab());
+        $this->assertStringContainsString('Auction won', $gameMessage->getSubject());
+    }
+
+    /**
      * Create a new battle report record in the database.
      *
      * @return int The ID of the newly created battle report.

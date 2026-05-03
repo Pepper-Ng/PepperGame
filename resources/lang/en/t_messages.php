@@ -487,4 +487,14 @@ NOTE: The total strength of all participants compared to the total strength of d
         'body' => 'Your repair request on planet :planet has been completed.
 :ship_count ships have been put back into service.',
     ],
+
+    // ------------------------
+    // Auctioneer winner message
+    'auctioneer_won' => [
+        'from' => 'Auctioneer',
+        'subject' => 'Auction won: :lot_title',
+        'body' => 'You won the auction for :lot_title.
+Delivery target: :planet
+Winning bid: :bid_points points.',
+    ],
 ];

@@ -9,6 +9,7 @@ use OGame\GameMessages\AcsDefendArrivalSender;
 use OGame\GameMessages\AllianceApplicationReceived;
 use OGame\GameMessages\AdminBroadcast;
 use OGame\GameMessages\AllianceBroadcast;
+use OGame\GameMessages\AuctioneerWon;
 use OGame\GameMessages\BattleReport;
 use OGame\GameMessages\BuddyRemoved;
 use OGame\GameMessages\BuddyRequestAccepted;
@@ -125,6 +126,7 @@ class GameMessageFactory
 
         // Wreck field messages
         'wreck_field_repair_completed' => WreckFieldRepairCompleted::class,
+            'auctioneer_won' => AuctioneerWon::class,
     ];
 
     /**
