@@ -25627,16 +25627,52 @@ function getAjaxEventbox() {
     return;
   }
 
-  $.get(ajaxEventboxURI, reloadEventbox, "text");
+  if (isAjaxEventboxRequestInFlight || isPageUnloading) {
+    return;
+  }
+
+  isAjaxEventboxRequestInFlight = true;
+  ajaxEventboxRequest = $.ajax({
+    url: ajaxEventboxURI,
+    type: 'GET',
+    dataType: 'json',
+    cache: false,
+    timeout: 10000
+  }).done(reloadEventbox).fail(function (_xhr, textStatus) {
+    // Abort is expected when navigating to another planet/page.
+    if (textStatus === 'abort' || isPageUnloading) {
+      return;
+    }
+
+    // Keep the UI usable even when polling fails and retry after a short delay.
+    $("#eventboxLoading").hide();
+    $("#eventboxBlank").show();
+    $("#eventboxFilled").hide();
+    setTimeout(getAjaxEventbox, 5000);
+  }).always(function () {
+    isAjaxEventboxRequestInFlight = false;
+    ajaxEventboxRequest = null;
+  });
 }
 
 let reloadEventBoxTimer = null;
+let ajaxEventboxRequest = null;
+let isAjaxEventboxRequestInFlight = false;
+let isPageUnloading = false;
 
 function reloadEventbox(data) {
   var evalData;
 
   if (typeof data === 'string') {
-    evalData = $.parseJSON(data);
+    try {
+      evalData = $.parseJSON(data);
+    } catch (error) {
+      $("#eventboxLoading").hide();
+      $("#eventboxBlank").show();
+      $("#eventboxFilled").hide();
+      setTimeout(getAjaxEventbox, 5000);
+      return;
+    }
   } else {
     evalData = data;
   }
@@ -25708,6 +25744,14 @@ function reloadEventbox(data) {
 }
 
 (function ($) {
+  $(window).on('beforeunload', function () {
+    isPageUnloading = true;
+
+    if (ajaxEventboxRequest !== null) {
+      ajaxEventboxRequest.abort();
+    }
+  });
+
   $(document).undelegate('.eventToggle', 'click').delegate('.eventToggle', 'click', function () {
     toggleEvents();
     return false;

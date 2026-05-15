@@ -2307,10 +2307,17 @@ class PlanetService
      */
     public function isBuilding(): bool
     {
-        $queue = resolve(BuildingQueueService::class);
-        $build_queue = $queue->retrieveQueue($this)->queue;
-
-        return count($build_queue) > 0;
+        // Ignore already-finished active rows so sidebars do not show stale wrench icons
+        // for non-current planets that have not been processed on this request.
+        return \OGame\Models\BuildingQueue::query()
+            ->where('planet_id', $this->getPlanetId())
+            ->where('processed', 0)
+            ->where('canceled', 0)
+            ->where(function ($query) {
+                $query->where('building', 0)
+                    ->orWhere('time_end', '>', now()->timestamp);
+            })
+            ->exists();
     }
 
     /**
