@@ -101,7 +101,7 @@
             <div id="detailWrapper">
                 @if ($has_moon)
                     <div id="moon">
-                        <a href="{{ request()->url() }}?{{ http_build_query([...request()->query(), 'cp' => $other_planet->getPlanetId()]) }}"
+                        <a href="{{ route('overview.index', ['cp' => $other_planet->getPlanetId()], false) }}"
                            class="tooltipBottom js_hideTipOnMobile"
                            title="{{ __('t_ingame.overview.switch_to_moon') }} {{ $other_planet->getPlanetName() }}">
                             <img alt="{{ $other_planet->getPlanetName() }}" src="{!! asset('img/moons/big/' . $other_planet->getPlanetImageType() . '.gif') !!}">
@@ -109,7 +109,7 @@
                     </div>
                 @elseif ($has_planet)
                     <div id="planet_as_moon">
-                        <a href="{{ request()->url() }}?{{ http_build_query([...request()->query(), 'cp' => $other_planet->getPlanetId()]) }}"
+                        <a href="{{ route('overview.index', ['cp' => $other_planet->getPlanetId()], false) }}"
                            class="tooltipBottom js_hideTipOnMobile"
                            title="{{ __('t_ingame.overview.switch_to_planet') }} {{ $other_planet->getPlanetName() }}">
                             <img alt="{{ $other_planet->getPlanetName() }}" src="{!! asset('img/planets/' . $other_planet->getPlanetBiomeType() . '_moon_view.jpg') !!}">
