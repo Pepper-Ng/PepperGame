@@ -43,6 +43,82 @@
                         </div>
                     </form>
 
+                    {{-- ===== PLAYER MANAGEMENT ===== --}}
+                    <p class="box_highlight textCenter no_buddies">@lang('Player Management')</p>
+                    <div class="group bborder" style="display: block; margin-bottom: 20px;">
+                        <form action="{{ route('admin.server-administration.grant-admin') }}" method="post" style="margin-bottom: 14px;">
+                            {{ csrf_field() }}
+                            <div class="fieldwrapper">
+                                <label class="styled textBeefy" for="grant_admin_lookup">Username or email:</label>
+                                <div class="thefield">
+                                    <input type="text"
+                                           id="grant_admin_lookup"
+                                           name="user_lookup"
+                                           class="textInput w150 textCenter textBeefy"
+                                           placeholder="Enter username or email"
+                                           value="{{ old('user_lookup') }}"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="fieldwrapper" style="text-align: center; margin-top: 10px;">
+                                <input type="submit" class="btn_blue" value="Grant Admin Role">
+                            </div>
+                        </form>
+
+                        <form action="{{ route('admin.server-administration.revoke-admin') }}" method="post" style="margin-bottom: 14px;">
+                            {{ csrf_field() }}
+                            <div class="fieldwrapper">
+                                <label class="styled textBeefy" for="revoke_admin_lookup">Username or email:</label>
+                                <div class="thefield">
+                                    <input type="text"
+                                           id="revoke_admin_lookup"
+                                           name="user_lookup"
+                                           class="textInput w150 textCenter textBeefy"
+                                           placeholder="Enter username or email"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="fieldwrapper" style="text-align: center; margin-top: 10px;">
+                                <input type="submit" class="btn_blue" value="Remove Admin Role">
+                            </div>
+                        </form>
+
+                        <form action="{{ route('admin.server-administration.reset-password') }}" method="post">
+                            {{ csrf_field() }}
+                            <div class="fieldwrapper">
+                                <label class="styled textBeefy" for="reset_password_lookup">Username or email:</label>
+                                <div class="thefield">
+                                    <input type="text"
+                                           id="reset_password_lookup"
+                                           name="user_lookup"
+                                           class="textInput w150 textCenter textBeefy"
+                                           placeholder="Enter username or email"
+                                           required>
+                                </div>
+                            </div>
+                            <div class="fieldwrapper">
+                                <label class="styled textBeefy" for="reset_password_value">New password:</label>
+                                <div class="thefield">
+                                    <input type="text"
+                                           id="reset_password_value"
+                                           name="new_password"
+                                           class="textInput w150 textCenter textBeefy"
+                                           placeholder="Leave empty for random"
+                                           autocomplete="new-password">
+                                </div>
+                            </div>
+                            <div class="fieldwrapper">
+                                <label class="styled textBeefy" for="generate_random_password">Generate random password:</label>
+                                <div class="thefield">
+                                    <input type="checkbox" id="generate_random_password" name="generate_random_password" value="1">
+                                </div>
+                            </div>
+                            <div class="fieldwrapper" style="text-align: center; margin-top: 10px;">
+                                <input type="submit" class="btn_blue" value="Reset Password">
+                            </div>
+                        </form>
+                    </div>
+
                     {{-- ===== FLAGGED ACCOUNTS ===== --}}
                     <p class="box_highlight textCenter no_buddies">@lang('Flagged Accounts')</p>
 

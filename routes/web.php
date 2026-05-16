@@ -303,6 +303,9 @@ Route::middleware(['auth', 'globalgame', 'locale', 'admin'])->group(function () 
 
     // Server administration (multi-account detection, bans)
     Route::get('/admin/server-administration', [ServerAdministrationController::class, 'index'])->name('admin.server-administration.index');
+    Route::post('/admin/server-administration/grant-admin', [ServerAdministrationController::class, 'grantAdmin'])->name('admin.server-administration.grant-admin');
+    Route::post('/admin/server-administration/revoke-admin', [ServerAdministrationController::class, 'revokeAdmin'])->name('admin.server-administration.revoke-admin');
+    Route::post('/admin/server-administration/reset-password', [ServerAdministrationController::class, 'resetPassword'])->name('admin.server-administration.reset-password');
     Route::post('/admin/server-administration/ban', [ServerAdministrationController::class, 'ban'])->name('admin.server-administration.ban');
     Route::post('/admin/server-administration/unban', [ServerAdministrationController::class, 'unban'])->name('admin.server-administration.unban');
     Route::post('/admin/server-administration/detection-settings', [ServerAdministrationController::class, 'saveDetectionSettings'])->name('admin.server-administration.detection-settings');

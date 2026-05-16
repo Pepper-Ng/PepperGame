@@ -1695,10 +1695,23 @@ However, the Space Dock's engineers think that some of the remains can be salvag
         <div id="planetbarcomponent" class="">
             <div id="rechts">
                 @php
-                    // Get all current query parameters
-                    $currentQueryParams = request()->query();
                     $totalPlanets = $currentPlayer->planets->planetCount();
                     $useCompactLayout = $totalPlanets >= 6;
+                    $currentPlanetListRoute = request()->route()?->getName();
+                    $supportedPlanetListRoutes = [
+                        'overview.index',
+                        'resources.index',
+                        'research.index',
+                        'facilities.index',
+                        'shipyard.index',
+                        'defense.index',
+                        'fleet.index',
+                        'galaxy.index',
+                    ];
+
+                    if (!in_array($currentPlanetListRoute, $supportedPlanetListRoutes, true)) {
+                        $currentPlanetListRoute = 'overview.index';
+                    }
                 @endphp
                 <div id="{{ $useCompactLayout ? 'cutty' : 'norm' }}">
                     <div id="{{ $useCompactLayout ? 'myPlanets' : 'myWorlds' }}">
@@ -1710,10 +1723,7 @@ However, the Space Dock's engineers think that some of the remains can be salvag
                         <div id="planetList">
                             @foreach ($planets->allPlanets() as $key => $planet)
                                 @php
-                                    // Set or replace the 'cp' parameter
-                                    $currentQueryParams['cp'] = $planet->getPlanetId();
-                                    // Generate the URL to the current route with the updated query parameters
-                                    $urlToPlanetWithUpdatedParam = request()->url() . '?' . http_build_query($currentQueryParams);
+                                    $urlToPlanetWithUpdatedParam = route($currentPlanetListRoute, ['cp' => $planet->getPlanetId()], false);
                                 @endphp
                                 <div class="smallplanet {{ $useCompactLayout ? 'smaller' : '' }} {{ ($planet->getPlanetId() === $currentPlanet->getPlanetId() && $currentPlayer->planets->allCount() > 1) ? 'hightlightPlanet' : '' }}"
                                      data-planet-id="{{ $planet->getPlanetId() }}" id="planet-{{ $key + 1 }}">
@@ -1723,14 +1733,14 @@ However, the Space Dock's engineers think that some of the remains can be salvag
                                         {{-- @lang('Lifeform'): Humans<br/> --}}
                                         {{ OGame\Facades\AppUtil::formatNumber($planet->getPlanetDiameter()) }}km ({{ $planet->getBuildingCount() }}/{{ $planet->getPlanetFieldMax() }})<br>
                                         {{ $planet->getPlanetTempMin() }} to {{ $planet->getPlanetTempMax() }}°C<br/>
-                                        <a href=&quot;{{ route('overview.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_overview') }}</a><br/>
-                                        <a href=&quot;{{ route('resources.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_resources') }}</a><br/>
-                                        <a href=&quot;{{ route('research.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_research') }}</a><br/>
-                                        <a href=&quot;{{ route('facilities.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_facilities') }}</a><br/>
-                                        <a href=&quot;{{ route('shipyard.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_shipyard') }}</a><br/>
-                                        <a href=&quot;{{ route('defense.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_defense') }}</a><br/>
-                                        <a href=&quot;{{ route('fleet.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_fleet') }}</a><br/>
-                                        <a href=&quot;{{ route('galaxy.index') }}?cp={{ $planet->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_galaxy') }}</a><br/>"
+                                        <a href=&quot;{{ route('overview.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_overview') }}</a><br/>
+                                        <a href=&quot;{{ route('resources.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_resources') }}</a><br/>
+                                        <a href=&quot;{{ route('research.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_research') }}</a><br/>
+                                        <a href=&quot;{{ route('facilities.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_facilities') }}</a><br/>
+                                        <a href=&quot;{{ route('shipyard.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_shipyard') }}</a><br/>
+                                        <a href=&quot;{{ route('defense.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_defense') }}</a><br/>
+                                        <a href=&quot;{{ route('fleet.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_fleet') }}</a><br/>
+                                        <a href=&quot;{{ route('galaxy.index', ['cp' => $planet->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_galaxy') }}</a><br/>"
                                        class="planetlink {{ ($planet->getPlanetId() === $currentPlanet->getPlanetId() && $currentPlayer->planets->allCount() > 1) ? 'active' : '' }} tooltipRight tooltipClose js_hideTipOnMobile ipiHintable"
                                        data-ipi-hint="ipiPlanetHomeplanet">
                                         @if ($useCompactLayout)
@@ -1768,18 +1778,17 @@ However, the Space Dock's engineers think that some of the remains can be salvag
                                     @if ($planet->hasMoon())
                                         @php
                                             $moon = $planet->moon();
-                                            $currentQueryParams['cp'] = $moon->getPlanetId();
-                                            $urlToMoonWithUpdatedParam = request()->url() . '?' . http_build_query($currentQueryParams);
+                                            $urlToMoonWithUpdatedParam = route($currentPlanetListRoute, ['cp' => $moon->getPlanetId()], false);
                                         @endphp
                                         <a class="moonlink {{ ($moon->getPlanetId() === $currentPlanet->getPlanetId() && $currentPlayer->planets->allCount() > 1) ? 'active' : '' }} tooltipLeft tooltipClose js_hideTipOnMobile"
                                            title="<b>{{ $moon->getPlanetName() }} [{{ $moon->getPlanetCoordinates()->asString() }}]</b><br>
                                            {{ OGame\Facades\AppUtil::formatNumber($moon->getPlanetDiameter()) }}km ({{ $moon->getBuildingCount() }}/{{ $moon->getPlanetFieldMax() }})<br/>
-                                           <a href=&quot;{{ route('overview.index') }}?cp={{ $moon->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_overview') }}</a><br/>
-                                           <a href=&quot;{{ route('resources.index') }}?cp={{ $moon->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_resources') }}</a><br/>
-                                           <a href=&quot;{{ route('facilities.index') }}?cp={{ $moon->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_facilities') }}</a><br/>
-                                           <a href=&quot;{{ route('defense.index') }}?cp={{ $moon->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_defense') }}</a><br/>
-                                           <a href=&quot;{{ route('fleet.index') }}?cp={{ $moon->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_fleet') }}</a><br/>
-                                           <a href=&quot;{{ route('galaxy.index') }}?cp={{ $moon->getPlanetId() }}&quot;>{{ __('t_ingame.layout.menu_galaxy') }}</a><br/>"
+                                           <a href=&quot;{{ route('overview.index', ['cp' => $moon->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_overview') }}</a><br/>
+                                           <a href=&quot;{{ route('resources.index', ['cp' => $moon->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_resources') }}</a><br/>
+                                           <a href=&quot;{{ route('facilities.index', ['cp' => $moon->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_facilities') }}</a><br/>
+                                           <a href=&quot;{{ route('defense.index', ['cp' => $moon->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_defense') }}</a><br/>
+                                           <a href=&quot;{{ route('fleet.index', ['cp' => $moon->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_fleet') }}</a><br/>
+                                           <a href=&quot;{{ route('galaxy.index', ['cp' => $moon->getPlanetId()], false) }}&quot;>{{ __('t_ingame.layout.menu_galaxy') }}</a><br/>"
                                            href="{{ $urlToMoonWithUpdatedParam }}"
                                            data-link="{{ $urlToMoonWithUpdatedParam }}"
                                            data-jumpgatelevel="0">

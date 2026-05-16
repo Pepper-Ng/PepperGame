@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use OGame\Factories\GameMissionFactory;
 use OGame\Factories\PlanetServiceFactory;
@@ -196,6 +198,101 @@ class ServerAdministrationController extends OGameController
 
         return redirect()->route('admin.server-administration.index')
             ->with('status', 'Chat message report dismissed.');
+    }
+
+    /**
+     * Grants the admin role to a player.
+     */
+    public function grantAdmin(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_lookup' => ['required', 'string', 'max:255'],
+        ]);
+
+        $user = $this->findUserByLookup($validated['user_lookup']);
+        if ($user === null) {
+            return redirect()->route('admin.server-administration.index')
+                ->with('error', 'Player not found.');
+        }
+
+        if ($user->hasRole('admin')) {
+            return redirect()->route('admin.server-administration.index')
+                ->with('error', "User \"{$user->username}\" is already an administrator.");
+        }
+
+        $user->assignRole('admin');
+
+        return redirect()->route('admin.server-administration.index')
+            ->with('status', "User \"{$user->username}\" is now an administrator.");
+    }
+
+    /**
+     * Removes the admin role from a player.
+     */
+    public function revokeAdmin(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_lookup' => ['required', 'string', 'max:255'],
+        ]);
+
+        $user = $this->findUserByLookup($validated['user_lookup']);
+        if ($user === null) {
+            return redirect()->route('admin.server-administration.index')
+                ->with('error', 'Player not found.');
+        }
+
+        if (!$user->hasRole('admin')) {
+            return redirect()->route('admin.server-administration.index')
+                ->with('error', "User \"{$user->username}\" is not an administrator.");
+        }
+
+        if ((int) $request->user()?->id === (int) $user->id) {
+            return redirect()->route('admin.server-administration.index')
+                ->with('error', 'You cannot remove your own administrator role here.');
+        }
+
+        $user->removeRole('admin');
+
+        return redirect()->route('admin.server-administration.index')
+            ->with('status', "Administrator role removed from \"{$user->username}\".");
+    }
+
+    /**
+     * Resets a player's password.
+     */
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_lookup' => ['required', 'string', 'max:255'],
+            'new_password' => ['nullable', 'string', 'min:8', 'max:255'],
+            'generate_random_password' => ['nullable', 'boolean'],
+        ]);
+
+        $user = $this->findUserByLookup($validated['user_lookup']);
+        if ($user === null) {
+            return redirect()->route('admin.server-administration.index')
+                ->with('error', 'Player not found.');
+        }
+
+        $generateRandomPassword = $request->boolean('generate_random_password');
+        $password = $generateRandomPassword
+            ? Str::random(12)
+            : ($validated['new_password'] ?? '');
+
+        if ($password === '') {
+            return redirect()->route('admin.server-administration.index')
+                ->with('error', 'Enter a new password or choose the random-password option.');
+        }
+
+        $user->password = Hash::make($password);
+        $user->save();
+
+        $message = $generateRandomPassword
+            ? "Password reset for \"{$user->username}\". New password: {$password}"
+            : "Password reset for \"{$user->username}\".";
+
+        return redirect()->route('admin.server-administration.index')
+            ->with('status', $message);
     }
 
     /**
@@ -532,6 +629,17 @@ class ServerAdministrationController extends OGameController
 
         return redirect()->route('admin.server-administration.index')
             ->with('status', 'Detection cache cleared. Results will be recomputed on this page load.');
+    }
+
+    /**
+     * Finds a user by username or email.
+     */
+    private function findUserByLookup(string $lookup): ?User
+    {
+        return User::query()
+            ->where('username', $lookup)
+            ->orWhere('email', $lookup)
+            ->first();
     }
 
     /**
