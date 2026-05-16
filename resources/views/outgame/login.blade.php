@@ -8,7 +8,7 @@
         <li><a id="tab2" href="#">{{ __('t_external.nav.about') }}</a></li>
         <li><a id="tab3" href="#">{{ __('t_external.nav.media') }}</a></li>
     </ul>
-    <a id="tab4" href="http://wiki.ogame.org" target="_blank">{{ __('t_external.nav.wiki') }}</a>
+    <a id="tab4" href="https://wiki.ogame.org" target="_blank">{{ __('t_external.nav.wiki') }}</a>
     <br class="clearfloat" />
     <div id="tabContentContainer">
         <div class="tabContent">
