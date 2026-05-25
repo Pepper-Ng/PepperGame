@@ -73,20 +73,20 @@ class AuctionLotTemplatesSeeder extends Seeder
 
         // ---- Resource production amplifiers (7-day buff) ----
         $resources = [
-            'metal' => 'Amplificatore di metallo',
-            'crystal' => 'Amplificatore di cristallo',
-            'deuterium' => 'Amplificatore di deuterio',
-            'energy' => 'Amplificatore di energia',
+            'metal' => 'Metal Booster',
+            'crystal' => 'Crystal Booster',
+            'deuterium' => 'Deuterium Booster',
+            'energy' => 'Energy Booster',
         ];
 
-        foreach ($resources as $resKey => $resLabelIt) {
+        foreach ($resources as $resKey => $resLabel) {
             $percents = $resKey === 'energy' ? self::BOOST_PERCENT_ENERGY : self::BOOST_PERCENT;
             foreach ($percents as $tier => $percent) {
                 $templates[] = [
                     'name' => ucfirst($resKey) . ' Booster ' . ucfirst($tier),
                     'tier' => $tier,
                     'lot_type' => 'resource_boost',
-                    'lot_title' => $resLabelIt . ' ' . $this->tierNameIt($tier),
+                    'lot_title' => $resLabel . ' ' . $this->tierName($tier),
                     'lot_payload' => [
                         'resource' => $resKey,
                         'percent' => $percent,
@@ -112,7 +112,7 @@ class AuctionLotTemplatesSeeder extends Seeder
                     'name' => $boosterName . ' ' . ucfirst($tier),
                     'tier' => $tier,
                     'lot_type' => $lotType,
-                    'lot_title' => $boosterName . ' ' . $this->tierNameIt($tier),
+                    'lot_title' => $boosterName . ' ' . $this->tierName($tier),
                     'lot_payload' => [
                         'duration_seconds' => $reductionSeconds,
                     ],
@@ -136,13 +136,13 @@ class AuctionLotTemplatesSeeder extends Seeder
         }
     }
 
-    private function tierNameIt(string $tier): string
+    private function tierName(string $tier): string
     {
         return match ($tier) {
-            'bronze' => 'Bronzo',
-            'silver' => 'Argento',
-            'gold' => 'Oro',
-            'platinum' => 'Platino',
+            'bronze' => 'Bronze',
+            'silver' => 'Silver',
+            'gold' => 'Gold',
+            'platinum' => 'Platinum',
             default => ucfirst($tier),
         };
     }

@@ -10,7 +10,7 @@ use OGame\Models\ShopItem;
  * duration_label scraped from live OGame to shop_items rows, matched by name.
  *
  * Source data: _research/shop/extended_descriptions.json
- * Format: { "Item Name": { "description": "...", "duration": "Durata: ora" } }
+ * Format: { "Item Name": { "description": "...", "duration": "Duration: now" } }
  *
  * Idempotent: re-running the seeder is safe.
  */
@@ -36,7 +36,7 @@ class ShopExtendedDescriptionsSeeder extends Seeder
         foreach ($map as $name => $data) {
             $desc = trim((string) ($data['description'] ?? ''));
             $dur = trim((string) ($data['duration'] ?? ''));
-            $dur = preg_replace('/^Durata:\s*/i', '', $dur);
+            $dur = preg_replace('/^(Durata|Duration):\s*/i', '', $dur);
             $dur = trim((string) explode("\n", $dur)[0]);
 
             $update = ['extended_description' => $desc];

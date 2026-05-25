@@ -10,13 +10,13 @@ use OGame\Models\ShopItem;
 class ShopCatalogSeeder extends Seeder
 {
     private const CATEGORY_LABELS = [
-        'offerte_speciali'  => 'Offerte speciali',
-        'seleziona_classe'  => 'Seleziona classe',
-        'costruzione'       => 'Costruzione',
-        'risorse'           => 'Risorse',
-        'booster_30'        => 'Booster 30 giorni',
-        'booster_90'        => 'Booster 90 giorni',
-        'profilo'           => 'Profilo',
+        'offerte_speciali'  => 'Special offers',
+        'seleziona_classe'  => 'Class selection',
+        'costruzione'       => 'Construction',
+        'risorse'           => 'Resources',
+        'booster_30'        => 'Booster 30 days',
+        'booster_90'        => 'Booster 90 days',
+        'profilo'           => 'Profile',
     ];
 
     public function run(): void
@@ -96,10 +96,8 @@ class ShopCatalogSeeder extends Seeder
     }
 
     /**
-     * Parse OGame Italian duration strings:
-     *   s = settimana (604800), g = giorno (86400), o = ora (3600), m = minuto (60)
-     *   "Permanente..." -> null
-     *   "ora" (standalone) -> 3600
+     * Parse OGame duration strings.
+     * Supports legacy Italian labels and English labels used by current seed data.
      */
     private function parseDurationSeconds(string $label): ?int
     {
@@ -107,13 +105,30 @@ class ShopCatalogSeeder extends Seeder
         if ($label === '') {
             return null;
         }
-        if (stripos($label, 'Permanente') === 0) {
+        if (stripos($label, 'Permanente') === 0 || stripos($label, 'Permanent') === 0) {
             return null;
         }
-        if (strcasecmp($label, 'ora') === 0) {
+        if (strcasecmp($label, 'ora') === 0 || strcasecmp($label, 'now') === 0) {
             return 3600;
         }
+        if (preg_match('/^\d+\s*[hH]$/', $label)) {
+            return (int) preg_replace('/\D/', '', $label) * 3600;
+        }
+        if (preg_match('/^\d+\s*[mM]$/', $label)) {
+            return (int) preg_replace('/\D/', '', $label) * 60;
+        }
 
+        if (preg_match_all('/(\d+)\s*([wdhm])\b/i', $label, $m, PREG_SET_ORDER)) {
+            $units = ['w' => 604800, 'd' => 86400, 'h' => 3600, 'm' => 60];
+            $total = 0;
+            foreach ($m as $match) {
+                $total += ((int) $match[1]) * $units[strtolower($match[2])];
+            }
+            return $total > 0 ? $total : null;
+        }
+
+        // Legacy Italian unit support:
+        // s = settimana, g = giorno, o = ora, m = minuto
         $units = ['s' => 604800, 'g' => 86400, 'o' => 3600, 'm' => 60];
         $total = 0;
         if (preg_match_all('/(\d+)\s*([sgom])\b/i', $label, $m, PREG_SET_ORDER)) {

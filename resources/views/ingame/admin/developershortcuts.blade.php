@@ -354,15 +354,15 @@
                                 {{-- Spawn specific lot template --}}
                                 @php
                                 $familyLabels = [
-                                    'resource_boost_metal'     => 'Amplificatore di metallo',
-                                    'resource_boost_crystal'   => 'Amplificatore di cristallo',
-                                    'resource_boost_deuterium' => 'Amplificatore di deuterio',
-                                    'resource_boost_energy'    => 'Amplificatore di energia',
+                                    'resource_boost_metal'     => 'Metal Booster',
+                                    'resource_boost_crystal'   => 'Crystal Booster',
+                                    'resource_boost_deuterium' => 'Deuterium Booster',
+                                    'resource_boost_energy'    => 'Energy Booster',
                                     'booster_kraken'           => 'KRAKEN',
                                     'booster_newtron'          => 'NEWTRON',
                                     'booster_detroid'          => 'DETROID',
                                 ];
-                                $tierLabel = ['bronze'=>'Bronzo','silver'=>'Argento','gold'=>'Oro','platinum'=>'Platino'];
+                                $tierLabel = ['bronze'=>'Bronze','silver'=>'Silver','gold'=>'Gold','platinum'=>'Platinum'];
                                 @endphp
                                 <div class="fieldwrapper" style="margin-top: 10px;">
                                     <form action="{{ route('admin.developershortcuts.auctioneer.spawn-specific') }}" method="post" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
@@ -379,7 +379,7 @@
                                                             } else {
                                                                 $secs = $p['duration_seconds'] ?? 0;
                                                                 $detail = $secs >= 86400
-                                                                    ? '-' . round($secs/86400) . ' giorno'
+                                                                    ? '-' . round($secs/86400) . ' day'
                                                                     : ($secs >= 3600 ? '-' . round($secs/3600) . 'h' : '-' . round($secs/60) . 'm');
                                                             }
                                                         @endphp

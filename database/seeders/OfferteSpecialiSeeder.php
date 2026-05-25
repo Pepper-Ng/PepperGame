@@ -29,7 +29,7 @@ class OfferteSpecialiSeeder extends Seeder
         DB::transaction(function () use ($items, $extMap) {
             $cat = ShopCategory::firstOrCreate(
                 ['key' => 'offerte_speciali'],
-                ['name' => 'Offerte speciali', 'sort_order' => 0]
+                ['name' => 'Special offers', 'sort_order' => 0]
             );
 
             $sort = 0;

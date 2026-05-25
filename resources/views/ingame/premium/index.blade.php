@@ -95,19 +95,19 @@
     </div>
 
     <script>
-        // URL usato da loadDetails() nel main layout per le chiamate AJAX degli ufficiali
+        // URL used by loadDetails() in the main layout for officer AJAX calls.
         var detailUrl = "{{ route('premium.ajax') }}";
 
         $(document).ready(function () {
-            // Inizializza gfSlider con il wrapper del detail panel.
-            // currHeight = offsetHeight di #detailWrapper (300px dal style inline).
-            // Questo permette al handler .slideIn nel JS globale di funzionare
-            // anche su pagine diverse da overview.
+            // Initializes gfSlider with the detail pannel wrapper.
+            // currHeight = offsetHeight of #detailWrapper (300px from inline style).
+            // This allows the .slideIn handler in the global JS to work
+            // even on pages other than overview.
             gfSlider = new GFSlider(getElementByIdWithCache('detailWrapper'));
 
-            // Se la pagina è stata aperta con ?openDetail=N (es. dal click sull'icona ufficiale
-            // nella barra header), simula il click sul bottone corrispondente per aprire
-            // automaticamente il pannello dettagli dell'ufficiale.
+            // If the page was opened with ?openDetail=N (e.g., from clicking the officer icon
+            // in the header bar), simulate a click on the corresponding button to automatically
+            // open the officer detail panel.
             var openDetail = {{ (int) request()->query('openDetail', 0) }};
             if (openDetail) {
                 var $btn = $("a.detail_button[ref='" + openDetail + "']");
