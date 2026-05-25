@@ -105,6 +105,23 @@ ensure_runtime_directories() {
         /var/www/bootstrap/cache
 }
 
+sanitize_bootstrap_cache() {
+    cache_dir=/var/www/bootstrap/cache
+
+    # Corrupted bootstrap cache files can break Laravel before bindings are registered.
+    find "$cache_dir" -maxdepth 1 -type f -name '*.php' -size 0 -delete 2>/dev/null || true
+
+    for cache_file in "$cache_dir"/*.php; do
+        if [ ! -f "$cache_file" ]; then
+            continue
+        fi
+
+        if ! php -l "$cache_file" >/dev/null 2>&1; then
+            rm -f "$cache_file"
+        fi
+    done
+}
+
 if [ "${BOOTSTRAP_FROM_ENV:-0}" = "1" ]; then
     create_env_file_from_environment
 elif [ ! -f /var/www/.env ]; then
@@ -128,6 +145,9 @@ fi
 
 # Configure Git to trust the working directory
 git config --global --add safe.directory /var/www
+
+ensure_runtime_directories
+sanitize_bootstrap_cache
 
 if [ "$role" = "scheduler" ]; then
     while true; do

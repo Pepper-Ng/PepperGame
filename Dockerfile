@@ -69,7 +69,22 @@ RUN dos2unix /usr/local/bin/entrypoint && \
 
 # Setup Rust/Cargo
 ENV PATH="/root/.cargo/bin:${PATH}"
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+RUN set -eux; \
+    rustup_installed=0; \
+    for attempt in 1 2 3; do \
+        if curl --retry 3 --retry-all-errors --connect-timeout 15 --max-time 120 https://sh.rustup.rs -sSf | sh -s -- -y; then \
+            rustup_installed=1; \
+            break; \
+        fi; \
+        echo "rustup install attempt ${attempt} failed, retrying..."; \
+    done; \
+    if [ "$rustup_installed" -ne 1 ]; then \
+        echo "rustup installation failed after retries; falling back to distro rustc/cargo packages"; \
+        apt-get update; \
+        apt-get install -y --no-install-recommends rustc cargo; \
+        apt-get clean; \
+        rm -rf /var/lib/apt/lists/*; \
+    fi; \
     echo 'source $HOME/.cargo/env' >> ~/.bashrc
 
 # Run entrypoint
